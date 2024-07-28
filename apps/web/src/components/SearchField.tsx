@@ -1,5 +1,5 @@
 import React from "react";
-import SearchIcon from "@/public/search-icon.svg";
+import SearchIcon from "@web/public/search-icon.svg";
 
 export default function SearchField() {
     return (

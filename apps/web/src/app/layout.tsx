@@ -1,8 +1,8 @@
-import SearchField from "../components/SearchField";
 import "./globals.css";
-import NotificationsIcon from "@/public/notifications.svg"
-import MessagingIcon from "@/public/messaging.svg"
-import PinterestIcon from "@/public/pinterest-logo.svg"
+import SearchField from "../components/SearchField";
+import NotificationsIcon from "@web/public/notifications.svg"
+import MessagingIcon from "@web/public/messaging.svg"
+import PinterestIcon from "@web/public/pinterest-logo.svg"
 
 export default function RootLayout({
     children,
