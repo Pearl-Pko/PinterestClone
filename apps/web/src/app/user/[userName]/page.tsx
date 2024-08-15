@@ -7,6 +7,7 @@ export default async function page({
 }: {
     params:{userName: string};
 }) {
+    console.log("yess");
     const res = await api.get(`users/user-name/${[params.userName]}`);
     const data = res.data;
 

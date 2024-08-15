@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
-import { DatabaseService } from '@server/database/database.service';
+import { DatabaseService } from '@server/modules/database/database.service';
 import { Post as PostEntity, Prisma } from '@prisma/client';
 import { AuthorNotFoundException } from '@server/common/exceptions/exceptions';
 
@@ -10,17 +10,28 @@ export class PostsService {
     constructor(private readonly database: DatabaseService) {}
 
     async create(data: CreatePostDto) {
+        const {author_id, ...rest} = data;
+
         try {
             return await this.database.post.create({
-                data: data,
+                "data": {
+                    ...rest,
+                    author: {
+                        connect: {
+                            id: data.author_id,
+                        },
+                    },
+                },
             });
         } catch (error) {
+            console.log(error.code);
             if (error instanceof Prisma.PrismaClientKnownRequestError) {
-                if (error.code === 'P2003') {
+                if (error.code === 'P2025') {
                     throw new AuthorNotFoundException(data.author_id);
                 }
             }
-            throw new Error('An unexpected error occurred');
+            throw error;
+            // throw new Error('An unexpected error occurred');
         }
     }
 

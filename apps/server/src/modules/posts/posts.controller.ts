@@ -19,24 +19,7 @@ export class PostsController {
 
     @Post()
     async create(@Body() createPostDto: CreatePostDto): Promise<PostEntity> {
-        console.log('yes');
-
         return await this.postsService.create(createPostDto);
-        // }
-        // catch (error) {
-
-        //   throw new NotFoundException(error.message)
-        // }
-    }
-
-    @Get()
-    findAll() {
-        return this.postsService.findAll();
-    }
-
-    @Get(':id')
-    findOne(@Param('id') id: string) {
-        return this.postsService.findOne(+id);
     }
 
     @Patch(':id')
