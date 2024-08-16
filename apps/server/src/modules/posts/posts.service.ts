@@ -9,7 +9,7 @@ import { AuthorNotFoundException } from '@server/common/exceptions/exceptions';
 export class PostsService {
     constructor(private readonly database: DatabaseService) {}
 
-    async create(data: CreatePostDto) {
+    async create(data: CreatePostDto): Promise<PostEntity> {
         const {author_id, ...rest} = data;
 
         try {
