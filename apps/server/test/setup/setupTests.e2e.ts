@@ -40,7 +40,6 @@ afterEach(async () => {
             WHERE schemaname='public'
             `;
 
-    // Truncate each table
     for (const { tablename } of tableNames) {
         if (tablename !== '_prisma_migrations') {
             await prisma.$executeRawUnsafe(

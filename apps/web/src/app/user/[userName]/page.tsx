@@ -1,5 +1,5 @@
 import React from "react";
-import api from "@web/src/utils/instance";
+import api from "@web/src/utils/api";
 import PinterestIcon from "@web/public/pinterest-logo.svg";
 
 export default async function page({
