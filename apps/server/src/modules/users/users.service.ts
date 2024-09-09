@@ -6,6 +6,19 @@ import { Prisma } from '@prisma/client';
 
 @Injectable()
 export class UsersService {
+    private readonly users = [
+        {
+            userId: 1,
+            username: 'john',
+            password: 'changeme',
+        },
+        {
+            userId: 2,
+            username: 'maria',
+            password: 'guess',
+        },
+    ];
+
     constructor(private readonly database: DatabaseService) {}
 
     create(createUserDto: Prisma.UserCreateInput) {}
@@ -14,15 +27,21 @@ export class UsersService {
         return `This action returns all users`;
     }
 
-    
+    async findOne(username: string) {
+        return this.users.find((user) => user.username === username);
+    }
+
     async findProfileByUserName(userName: string) {
-        const user = await  this.database.user.findUnique({
+        const user = await this.database.user.findUnique({
             where: {
                 user_name: userName,
             },
         });
-        if (!user) throw new NotFoundException(`User not found with user name ${userName}`)
-        console.log("user exists");
+        if (!user)
+            throw new NotFoundException(
+                `User not found with user name ${userName}`,
+            );
+        console.log('user exists');
         return user;
     }
 

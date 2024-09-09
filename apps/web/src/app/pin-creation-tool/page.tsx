@@ -41,7 +41,6 @@ export default function page() {
         watch,
         formState: {errors, isSubmitting},
     } = useForm<FormValues>({resolver: zodResolver(schema)});
-
     useEffect(() => {
         // setError("external_link", {type: "dew", message: "Invalid url"})
     }, []);

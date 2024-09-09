@@ -7,16 +7,25 @@ import { DatabaseModule } from './modules/database/database.module';
 import { PostsModule } from './modules/posts/posts.module';
 import { APP_INTERCEPTOR } from '@nestjs/core';
 import { LoggingInterceptor } from './interceptors/logger-interceptor';
+import { AuthModule } from './modules/auth/auth.module';
 
 @Module({
-    imports: [ConfigModule.forRoot(), UsersModule, DatabaseModule, PostsModule],
+    imports: [
+        ConfigModule.forRoot({
+            isGlobal: true,
+        }),
+        UsersModule,
+        DatabaseModule,
+        PostsModule,
+        AuthModule,
+    ],
     controllers: [AppController],
     providers: [
         AppService,
         {
             provide: APP_INTERCEPTOR,
             useClass: LoggingInterceptor,
-        }
+        },
     ],
 })
 export class AppModule {}

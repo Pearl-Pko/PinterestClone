@@ -4,7 +4,7 @@ import { PostsController } from './posts.controller';
 import { DatabaseModule } from '@server/modules/database/database.module';
 
 @Module({
-  imports: [DatabaseModule],
+  imports: [],
   controllers: [PostsController],
   providers: [PostsService],
 })
