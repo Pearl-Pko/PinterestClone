@@ -8,13 +8,12 @@ import {
 import { ConfigService } from '@nestjs/config';
 import { Reflector } from '@nestjs/core';
 import { JwtService } from '@nestjs/jwt';
+import { IS_PUBLIC_KEY } from '@server/constants/constants';
 
 import { Request } from 'express';
 
-export const IS_PUBLIC_KEY = 'isPublic';
-export const Public = () => SetMetadata(IS_PUBLIC_KEY, true);
 
-@Injectable()
+
 export class AuthGuard implements CanActivate {
     constructor(
         private jwtService: JwtService,
