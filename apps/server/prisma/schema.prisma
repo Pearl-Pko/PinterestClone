@@ -16,11 +16,12 @@ datasource db {
 model User {
   id            String    @id @default(uuid())
   email         String    @unique
-  user_name     String    @unique
+  username     String    @unique
   first_name    String?
   last_name     String?
   about         String?
   website       String?
+  password      String
   date_of_birth DateTime? @db.Date
   gender        Gender?
   country       String?
@@ -30,13 +31,21 @@ model User {
   Board         Board[]
   Post          Post[]
   Account       Account?
+  Session       Session[]
 }
 
 model Account {
-  id       String @id @default(uuid())
-  user     User   @relation(fields: [user_id], references: [id])
-  user_id  String @unique
-  password String
+  id      String @id @default(uuid())
+  user    User   @relation(fields: [user_id], references: [id])
+  user_id String @unique
+}
+
+model Session {
+  refresh_token_hash String   @unique
+  expires_at         DateTime
+  user               User     @relation(fields: [userId], references: [id])
+  userId             String
+  created_at         DateTime @default(now())
 }
 
 model Board {

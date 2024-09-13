@@ -8,3 +8,21 @@ export class AuthorNotFoundException extends HttpException {
         );
     }
 }
+
+export class UserAlreadyExists extends HttpException {
+    constructor() {
+        super(
+            "User already exists",
+            HttpStatus.BAD_REQUEST
+        )
+    }
+}
+
+export class UserNotFoundException extends HttpException {
+    constructor(email: string) {
+        super(
+            `User with email ${email} does not exist`,
+            HttpStatus.NOT_FOUND
+        )
+    }
+}

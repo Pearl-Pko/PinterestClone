@@ -2,66 +2,34 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { DatabaseService } from '@server/modules/database/database.service';
-import { Prisma } from '@prisma/client';
+import { Prisma , User} from '@prisma/client';
 
 @Injectable()
 export class UsersService {
-    private readonly users = [
-        {
-            userId: 1,
-            username: 'john',
-            password: 'changeme',
-        },
-        {
-            userId: 2,
-            username: 'maria',
-            password: 'guess',
-        },
-    ];
-
     constructor(private readonly database: DatabaseService) {}
 
-    create(createUserDto: Prisma.UserCreateInput) {}
-
-    findAll() {
-        return `This action returns all users`;
-    }
-
-    async findOne(username: string) {
-        return this.users.find((user) => user.username === username);
-    }
-
-    async findProfileByUserName(userName: string) {
-        const user = await this.database.user.findUnique({
+    async findUser({ username, email }: { username?: string; email?: string }): Promise<User | null> {
+        if (!username && !email) 
+            throw new Error("Username or email must be given");
+        
+        return await this.database.user.findFirst({
             where: {
-                user_name: userName,
+                OR: [
+                    { email: { equals: email, mode: 'insensitive' } },
+                    { username: username },
+                ],
             },
         });
-        if (!user)
-            throw new NotFoundException(
-                `User not found with user name ${userName}`,
-            );
-        console.log('user exists');
-        return user;
     }
 
-    findProfileById(id: string) {
-        const user = this.database.user.findUnique({
-            where: {
-                id: id,
-            },
-        });
+    async create(user: CreateUserDto) {
+        const randomUserName = user.email;
 
-        if (!user) throw new NotFoundException(``);
-
-        return user;
-    }
-
-    update(id: number, updateUserDto: UpdateUserDto) {
-        return `This action updates a #${id} user`;
-    }
-
-    remove(id: number) {
-        return `This action removes a #${id} user`;
+        return await this.database.user.create({
+            data: {
+                ...user,
+                username: randomUserName
+            }
+        })
     }
 }
