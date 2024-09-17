@@ -20,7 +20,7 @@ import { CreateUserDto } from '../users/dto/create-user.dto';
 import { RefreshTokenGuard } from './guards/refresh-auth.guard';
 import { User } from '@server/decorators/user';
 import { AccessToken, RefreshToken } from '@server/types/auth';
-import { ChangePassword } from './dto/dto';
+import { ChangePassword, ForgotPasswordDto, ResetPasswordDto } from './dto/dto';
 @Controller('auth')
 export class AuthController {
     constructor(private readonly authService: AuthService) {}
@@ -60,7 +60,7 @@ export class AuthController {
     @Post('logout')
     async logout(@User<RefreshToken>() token: RefreshToken) {
         if (await this.authService.logout(token)) {
-            return { status: 'true', message: 'Successfully logged out' };
+            return { status: 'success', message: 'Successfully logged out' };
         }
         throw new HttpException("Failed to log out", HttpStatus.NOT_FOUND);
     }
@@ -69,8 +69,32 @@ export class AuthController {
     async changePassword(@User<AccessToken>() token: AccessToken, @Body() password: ChangePassword) {
         // this.authService.
         if (await this.authService.changePassword(token, password)) {
-            return { status: 'true', message: 'Successfully changed password' };
+            return { status: 'success', message: 'Successfully changed password' };
         }
         throw new HttpException("Failed to changed password", HttpStatus.NOT_FOUND);
+    }
+
+    @Public()
+    @Post("forgot-password") 
+    async forgotPassword(@Body() forgotPasswordDto: ForgotPasswordDto) {
+        // this.authService.
+        return await this.authService.requestPasswordReset(forgotPasswordDto.email);
+
+        // if (await this.authService.forgotPassword(forgotPasswordDto.email)) {
+        //     return { status: 'success', message: 'Successfully changed password' };
+        // }
+        // throw new HttpException("Failed to changed password", HttpStatus.NOT_FOUND);
+    }
+
+    @Public()
+    @Post("reset-password") 
+    @HttpCode(HttpStatus.OK)
+    async resetPassword(@Body() resetPasswordDto: ResetPasswordDto) {
+        const resetPasswordStatus = await this.authService.resetPassword(resetPasswordDto);
+        if (resetPasswordStatus) {
+            return {status: "sucess", message: "Successfully changed password"}
+        }
+        throw new HttpException("Failed to reset password", HttpStatus.NOT_FOUND);
+
     }
 }

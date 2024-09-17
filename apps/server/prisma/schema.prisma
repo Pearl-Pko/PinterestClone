@@ -14,24 +14,26 @@ datasource db {
 }
 
 model User {
-  id            String    @id @default(uuid())
-  email         String    @unique
-  username      String    @unique
-  first_name    String?
-  last_name     String?
-  about         String?
-  website       String?
-  password      String
-  date_of_birth DateTime? @db.Date
-  gender        Gender?
-  country       String?
-  created_at    DateTime  @default(now())
-  updated_at    DateTime  @updatedAt
-  Pin           Pin[]
-  Board         Board[]
-  Post          Post[]
-  Account       Account?
-  Session       Session[]
+  id                     String    @id @default(uuid())
+  email                  String    @unique
+  username               String    @unique
+  first_name             String?
+  last_name              String?
+  about                  String?
+  website                String?
+  password               String
+  date_of_birth          DateTime? @db.Date
+  gender                 Gender?
+  country                String?
+  created_at             DateTime  @default(now())
+  updated_at             DateTime  @updatedAt
+  reset_token            String?
+  reset_token_expires_at DateTime?
+  Pin                    Pin[]
+  Board                  Board[]
+  Post                   Post[]
+  Account                Account?
+  Session                Session[]
 }
 
 model Account {
@@ -45,7 +47,7 @@ model Session {
   token_hash String   @unique
   expires_at DateTime
   user       User     @relation(fields: [user_id], references: [id])
-  user_id     String
+  user_id    String
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
 

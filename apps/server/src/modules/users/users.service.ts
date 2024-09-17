@@ -28,6 +28,14 @@ export class UsersService {
         });
     }
 
+    async findUserByResetToken(resetToken: string) {
+        return await this.database.user.findFirst({
+            where: {
+                reset_token: resetToken,
+            },
+        });
+    }
+
     async create(user: CreateUserDto) {
         const randomUserName = user.email;
 
@@ -40,6 +48,9 @@ export class UsersService {
     }
 
     async updateUser(userId: string, newData: Partial<User>) {
-        return await this.database.user.update({ where: { id: userId }, data: newData });
+        return await this.database.user.update({
+            where: { id: userId },
+            data: newData,
+        });
     }
 }

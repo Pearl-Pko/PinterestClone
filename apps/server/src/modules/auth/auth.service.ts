@@ -27,8 +27,9 @@ import {
     RefreshTokenDto,
     Tokens,
 } from '@server/types/auth';
-import { ChangePassword } from './dto/dto';
+import { ChangePassword, ResetPasswordDto } from './dto/dto';
 import { DatabaseService } from '../database/database.service';
+import { createHmac, randomBytes } from 'crypto';
 
 @Injectable()
 export class AuthService {
@@ -48,7 +49,7 @@ export class AuthService {
             throw new UserNotFoundException(userDto.email);
         }
 
-        const passwordMatch = await this.comparePassword(
+        const passwordMatch = await this.compareHash(
             userDto.password,
             user.password,
         );
@@ -120,8 +121,8 @@ export class AuthService {
         return await bcrypt.hash(data, saltRounds);
     }
 
-    async comparePassword(password: string, hashedPassword: string) {
-        return bcrypt.compare(password, hashedPassword);
+    async compareHash(plainText: string, hash: string) {
+        return bcrypt.compare(plainText, hash);
     }
 
     async getTokens(userId: string, user: AccessToken, token_id: string) {
@@ -192,7 +193,7 @@ export class AuthService {
             throw new UserNotFoundException(userToken.email);
         }
 
-        const passwordMatch = await this.comparePassword(
+        const passwordMatch = await this.compareHash(
             password.oldPassword,
             user.password,
         );
@@ -209,6 +210,72 @@ export class AuthService {
 
         await this.sessionService.invalidateUserSessions(userToken.id);
 
+        return true;
+    }
+
+    async generateResetToken() {
+        const resetToken = randomBytes(64).toString('base64');
+        const resetTokenExpiry = new Date(Date.now() + 3600 * 1000);
+        return { resetToken, resetTokenExpiry };
+    }
+    
+    generateHMac(token: string) {
+        const hmac = createHmac(
+            'sha256',
+            this.configService.get<string>('RESET_TOKEN_SECRET')!,
+        )
+            .update(token)
+            .digest('base64');
+        return hmac;
+    }
+
+    async requestPasswordReset(email: string) {
+        const user = await this.usersService.findUser({ email: email });
+
+        if (!user) {
+            throw new UserNotFoundException(email);
+        }
+
+        const { resetToken, resetTokenExpiry } =
+            await this.generateResetToken();
+
+        const hashedResetToken = this.generateHMac(resetToken);
+
+        await this.usersService.updateUser(user.id, {
+            reset_token: hashedResetToken,
+            reset_token_expires_at: resetTokenExpiry,
+        });
+
+        return { resetToken };
+    }
+
+    async resetPassword(resetPasswordDto: ResetPasswordDto) {
+        const hashedResetToken = this.generateHMac(resetPasswordDto.token);
+        const user = await this.usersService.findUserByResetToken(hashedResetToken);
+
+        if (!user) {
+            throw new UnauthorizedException("Invalid or expired token");
+        }
+
+        if (!user.reset_token && user.reset_token_expires_at! < new Date()) {
+            throw new UnauthorizedException('Invalid or expired token');
+        }
+
+        const match = hashedResetToken === user.reset_token;
+
+        if (!match) {
+            throw new UnauthorizedException('Invalid or expired token');
+        }
+
+        const newPassword = await this.hashData(resetPasswordDto.newPassword);
+
+        await this.usersService.updateUser(user.id, {
+            password: newPassword,
+            reset_token: null,
+            reset_token_expires_at: null,
+        });
+
+        await this.sessionService.invalidateUserSessions(user.id);
         return true;
     }
 }

@@ -61,6 +61,7 @@ export class SessionService {
             });
             return true;
         } catch (error) {
+            
             // console.error(error);
             return false;
         }
