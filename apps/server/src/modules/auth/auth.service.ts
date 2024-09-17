@@ -173,4 +173,8 @@ export class AuthService {
 
         return this.generateAccessToken(user);
     }
+
+    async logout(refreshToken: RefreshToken) {
+        return await this.sessionService.deleteSession(refreshToken.token_id)
+    }
 }

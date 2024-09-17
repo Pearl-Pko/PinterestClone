@@ -50,4 +50,15 @@ export class AuthController {
     getProfile(@Request() req: { user: string }) {
         return req.user;
     }
+
+
+    @Public()
+    @UseGuards(RefreshTokenGuard)
+    @Post('logout')
+    async logout(@Request() req: any) {
+        if (await this.authService.logout(req.user)) {
+            return {status: "true", message: "Successfully logged out"}
+        }
+        return {status: "Invalid token"};
+    }
 }

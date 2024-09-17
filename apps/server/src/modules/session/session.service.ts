@@ -26,9 +26,13 @@ export class SessionService {
         });
     }
 
-    async verifySession(userId: string, tokenId: string, refreshToken: string): Promise<User> {
+    async verifySession(
+        userId: string,
+        tokenId: string,
+        refreshToken: string,
+    ): Promise<User> {
         const session = await this.databaseService.session.findUnique({
-            where: {id: tokenId },
+            where: { id: tokenId },
             include: { user: true },
         });
 
@@ -36,18 +40,33 @@ export class SessionService {
             throw new UnauthorizedException('Refresh token not found');
         }
 
-        const tokenMatches = await bcrypt.compare(refreshToken, session.token_hash);
+        const tokenMatches = await bcrypt.compare(
+            refreshToken,
+            session.token_hash,
+        );
 
         if (!tokenMatches) {
-            throw new UnauthorizedException("Refresh token is not valid")
+            throw new UnauthorizedException('Refresh token is not valid');
         }
 
         return session.user;
     }
 
-    async deleteSession() {}
+    async deleteSession(tokenId: string): Promise<boolean> {
+        try {
+            await this.databaseService.session.delete({
+                where: {
+                    id: tokenId,
+                },
+            });
+            return true;
+        } catch (error) {
+            // console.error(error);
+            return false;
+        }
+    }
 
     async compareHash() {
-        return 
+        return;
     }
 }
