@@ -10,6 +10,7 @@ import {
     HttpStatus,
     UseGuards,
     Request,
+    HttpException,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { AuthGuard } from '@nestjs/passport';
@@ -19,6 +20,7 @@ import { CreateUserDto } from '../users/dto/create-user.dto';
 import { RefreshTokenGuard } from './guards/refresh-auth.guard';
 import { User } from '@server/decorators/user';
 import { AccessToken, RefreshToken } from '@server/types/auth';
+import { ChangePassword } from './dto/dto';
 @Controller('auth')
 export class AuthController {
     constructor(private readonly authService: AuthService) {}
@@ -60,6 +62,15 @@ export class AuthController {
         if (await this.authService.logout(token)) {
             return { status: 'true', message: 'Successfully logged out' };
         }
-        return { status: 'Invalid token' };
+        throw new HttpException("Failed to log out", HttpStatus.NOT_FOUND);
+    }
+
+    @Post("change-password") 
+    async changePassword(@User<AccessToken>() token: AccessToken, @Body() password: ChangePassword) {
+        // this.authService.
+        if (await this.authService.changePassword(token, password)) {
+            return { status: 'true', message: 'Successfully changed password' };
+        }
+        throw new HttpException("Failed to changed password", HttpStatus.NOT_FOUND);
     }
 }

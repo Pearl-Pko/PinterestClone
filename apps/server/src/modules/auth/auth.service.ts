@@ -1,5 +1,7 @@
 import {
     BadRequestException,
+    HttpException,
+    HttpStatus,
     Injectable,
     NotFoundException,
     UnauthorizedException,
@@ -25,6 +27,8 @@ import {
     RefreshTokenDto,
     Tokens,
 } from '@server/types/auth';
+import { ChangePassword } from './dto/dto';
+import { DatabaseService } from '../database/database.service';
 
 @Injectable()
 export class AuthService {
@@ -33,6 +37,7 @@ export class AuthService {
         private jwtService: JwtService,
         private configService: ConfigService,
         private sessionService: SessionService,
+        private databaseService: DatabaseService,
     ) {}
 
     async signIn(userDto: CreateUserDto): Promise<Tokens> {
@@ -47,7 +52,7 @@ export class AuthService {
             userDto.password,
             user.password,
         );
-        console.log('password match', passwordMatch);
+
         if (!passwordMatch) {
             throw new NotFoundException('Incorrect password');
         }
@@ -175,6 +180,35 @@ export class AuthService {
     }
 
     async logout(refreshToken: RefreshToken) {
-        return await this.sessionService.deleteSession(refreshToken.token_id)
+        return await this.sessionService.deleteSession(refreshToken.token_id);
+    }
+
+    async changePassword(userToken: AccessToken, password: ChangePassword) {
+        const user = await this.usersService.findUser({
+            email: userToken.email,
+        });
+
+        if (!user) {
+            throw new UserNotFoundException(userToken.email);
+        }
+
+        const passwordMatch = await this.comparePassword(
+            password.oldPassword,
+            user.password,
+        );
+
+        if (!passwordMatch) {
+            throw new HttpException('Incorrect password', HttpStatus.FORBIDDEN);
+        }
+
+        const hashNewPassword = await this.hashData(password.newPassword);
+
+        await this.usersService.updateUser(userToken.id, {
+            password: hashNewPassword,
+        });
+
+        await this.sessionService.invalidateUserSessions(userToken.id);
+
+        return true;
     }
 }

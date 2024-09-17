@@ -66,7 +66,20 @@ export class SessionService {
         }
     }
 
+    async invalidateUserSessions(userId: string): Promise<boolean> {
+        try {
+            await this.databaseService.session.deleteMany({where: {user_id: userId}})
+            return true;
+        }
+        catch (error) {
+            // console.log(error);
+            return false 
+        }
+    }
+
     async compareHash() {
         return;
     }
+
+
 }
