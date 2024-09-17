@@ -8,14 +8,39 @@ type Tokens = {
 
 type JwtToken = {
     sub: string;
-    data: Token;
     exp: number;
     iat: number
 }
 
-interface Token  {
-    email: string;
+
+type AccessTokenPayload = {
+    email?: string;
     first_name?: string | null;
     last_name?: string | null;
     username?: string | null;
+}
+
+
+
+interface AccessTokenDTO extends JwtToken  {
+
+    data: AccessTokenPayload
+}
+
+interface AccessToken extends AccessTokenPayload {
+    id: string;
+}
+
+type RefreshTokenPayload = {
+    token_id: string
+}
+
+interface RefreshTokenDto extends JwtToken {
+    data: RefreshTokenPayload
+}
+
+interface RefreshToken {
+    id: string;
+    token_id: string;
+    refresh_token: string
 }

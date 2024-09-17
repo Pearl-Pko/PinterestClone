@@ -13,18 +13,18 @@ import {
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { AuthGuard } from '@nestjs/passport';
-import { JwtAuthGuard } from './guards/access-auth.guard';
+import { AccessTokenGuard } from './guards/access-auth.guard';
 import { Public } from '@server/constants/constants';
 import { CreateUserDto } from '../users/dto/create-user.dto';
+import { RefreshTokenGuard } from './guards/refresh-auth.guard';
 @Controller('auth')
 export class AuthController {
     constructor(private readonly authService: AuthService) {}
 
-
     @Public()
     // @UseGuards(AuthGuard("local"))
     @HttpCode(HttpStatus.OK)
-    @Post("login")
+    @Post('login')
     async login(@Body() createUserDto: CreateUserDto) {
         // console.log("req", req);
         return this.authService.signIn(createUserDto);
@@ -32,14 +32,22 @@ export class AuthController {
 
     @Public()
     @HttpCode(HttpStatus.OK)
-    @Post("signup")
+    @Post('signup')
     async signup(@Body() createUserDto: CreateUserDto) {
         // console.log("req", req);
         return this.authService.signUp(createUserDto);
     }
 
-    @Get("profile") 
-    getProfile(@Request() req: {user: string}) {
+    @Public()
+    @UseGuards(RefreshTokenGuard)
+    @Post('refresh')
+    async refresh(@Request() req: any) {
+        return { access_token: await this.authService.refreshToken(req.user) };
+        // console.log("refresh", req.user.refreshToken)
+    }
+
+    @Get('profile')
+    getProfile(@Request() req: { user: string }) {
         return req.user;
     }
 }

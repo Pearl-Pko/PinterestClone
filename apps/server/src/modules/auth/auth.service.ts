@@ -1,6 +1,7 @@
 import {
     BadRequestException,
     Injectable,
+    NotFoundException,
     UnauthorizedException,
 } from '@nestjs/common';
 import { CreateAuthDto } from './dto/create-auth.dto';
@@ -10,13 +11,20 @@ import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { CreateUserDto } from '../users/dto/create-user.dto';
 import { User } from '@prisma/client';
+import { v4 as uuidv4 } from 'uuid';
 import {
     UserAlreadyExists,
     UserNotFoundException,
 } from '@server/common/exceptions/exceptions';
 import * as bcrypt from 'bcrypt';
 import { SessionService } from '../session/session.service';
-import { Token, Tokens } from '@server/types/auth';
+import {
+    AccessToken,
+    AccessTokenPayload,
+    RefreshToken,
+    RefreshTokenDto,
+    Tokens,
+} from '@server/types/auth';
 
 @Injectable()
 export class AuthService {
@@ -35,12 +43,13 @@ export class AuthService {
             throw new UserNotFoundException(userDto.email);
         }
 
-        const passwordMatch = this.comparePassword(
+        const passwordMatch = await this.comparePassword(
             userDto.password,
             user.password,
         );
+        console.log('password match', passwordMatch);
         if (!passwordMatch) {
-            throw new BadRequestException('Incorrect password');
+            throw new NotFoundException('Incorrect password');
         }
 
         return this.createUserSession(user);
@@ -64,22 +73,28 @@ export class AuthService {
     }
 
     async createUserSession(user: User): Promise<Tokens> {
+        const token_id = uuidv4();
         const { accessToken, refreshToken } = await this.getTokens(
             user.id,
             user,
+            token_id,
         );
 
         const hashedRefreshToken = await this.hashData(refreshToken);
 
         this.sessionService.createSession({
-            refresh_token_hash: hashedRefreshToken,
+            token_hash: hashedRefreshToken,
             expires_at: new Date(),
-            userId: user.id,
+            user_id: user.id,
+            id: token_id,
         });
         return { access_token: accessToken, refresh_token: refreshToken };
     }
 
-    async validateUser(email: string, password: string): Promise<Token | null> {
+    async validateUser(
+        email: string,
+        password: string,
+    ): Promise<AccessTokenPayload | null> {
         const user = await this.usersService.findUser({ email });
 
         const hashPassword = await this.hashData(password);
@@ -104,37 +119,58 @@ export class AuthService {
         return bcrypt.compare(password, hashedPassword);
     }
 
-    async getTokens(userId: string, user: Token) {
+    async getTokens(userId: string, user: AccessToken, token_id: string) {
         const [accessToken, refreshToken] = await Promise.all([
-            this.jwtService.signAsync(
-                {
-                    sub: userId,
-                    data: {
-                        email: user.email,
-                        first_name: user.first_name,
-                        last_name: user.first_name,
-                        username: user.username,
-                    },
-                },
-                {
-                    secret: this.configService.get<string>('JWT_ACCESS_SECRET'),
-                    expiresIn: this.configService.get<string>(
-                        'JWT_ACCESS_TOKEN_EXPIRES_IN',
-                    ),
-                },
-            ),
-            this.jwtService.signAsync(
-                { sub: userId },
-                {
-                    secret: this.configService.get<string>(
-                        'JWT_REFRESH_SECRET',
-                    ),
-                    expiresIn: this.configService.get<string>(
-                        'JWT_REFRESH_TOKEN_EXPIRES_IN',
-                    ),
-                },
-            ),
+            this.generateAccessToken(user),
+            this.generateRefreshToken(user, token_id),
         ]);
         return { accessToken, refreshToken };
+    }
+
+    async generateAccessToken(user: AccessToken) {
+        return this.jwtService.signAsync(
+            {
+                sub: user.id,
+                data: {
+                    email: user.email,
+                    first_name: user.first_name,
+                    last_name: user.first_name,
+                    username: user.username,
+                },
+            },
+            {
+                secret: this.configService.get<string>('JWT_ACCESS_SECRET'),
+                expiresIn: this.configService.get<string>(
+                    'JWT_ACCESS_TOKEN_EXPIRES_IN',
+                ),
+            },
+        );
+    }
+
+    async generateRefreshToken(user: AccessToken, token_id: string) {
+        return this.jwtService.signAsync(
+            {
+                sub: user.id,
+                data: {
+                    token_id: token_id,
+                },
+            },
+            {
+                secret: this.configService.get<string>('JWT_REFRESH_SECRET'),
+                expiresIn: this.configService.get<string>(
+                    'JWT_REFRESH_TOKEN_EXPIRES_IN',
+                ),
+            },
+        );
+    }
+
+    async refreshToken(refreshToken: RefreshToken) {
+        const user = await this.sessionService.verifySession(
+            refreshToken.id,
+            refreshToken.token_id,
+            refreshToken.refresh_token,
+        );
+
+        return this.generateAccessToken(user);
     }
 }

@@ -7,7 +7,7 @@ import { ConfigService } from '@nestjs/config';
 import { APP_GUARD } from '@nestjs/core';
 import { PassportModule } from '@nestjs/passport';
 import { LocalStrategy } from './strategy/local.strategy';
-import { JwtAuthGuard } from './guards/access-auth.guard';
+import { AccessTokenGuard } from './guards/access-auth.guard';
 import { AccessTokenStrategy } from './strategy/jwt.strategy';
 import { RefreshTokenStrategy } from './strategy/refresh.strategy';
 import { SessionModule } from '../session/session.module';
@@ -30,7 +30,7 @@ import { SessionModule } from '../session/session.module';
     providers: [
         AuthService,
 
-        // { provide: APP_GUARD, useClass: JwtAuthGuard },
+        { provide: APP_GUARD, useClass: AccessTokenGuard },
         ConfigService,
         LocalStrategy,
         AccessTokenStrategy,
