@@ -17,6 +17,8 @@ import { AccessTokenGuard } from './guards/access-auth.guard';
 import { Public } from '@server/constants/constants';
 import { CreateUserDto } from '../users/dto/create-user.dto';
 import { RefreshTokenGuard } from './guards/refresh-auth.guard';
+import { User } from '@server/decorators/user';
+import { AccessToken, RefreshToken } from '@server/types/auth';
 @Controller('auth')
 export class AuthController {
     constructor(private readonly authService: AuthService) {}
@@ -41,24 +43,23 @@ export class AuthController {
     @Public()
     @UseGuards(RefreshTokenGuard)
     @Post('refresh')
-    async refresh(@Request() req: any) {
-        return { access_token: await this.authService.refreshToken(req.user) };
+    async refresh(@User<RefreshToken>() token: RefreshToken) {
+        return { access_token: await this.authService.refreshToken(token) };
         // console.log("refresh", req.user.refreshToken)
     }
 
     @Get('profile')
-    getProfile(@Request() req: { user: string }) {
-        return req.user;
+    getProfile(@User<AccessToken>() token: AccessToken) {
+        return token;
     }
-
 
     @Public()
     @UseGuards(RefreshTokenGuard)
     @Post('logout')
-    async logout(@Request() req: any) {
-        if (await this.authService.logout(req.user)) {
-            return {status: "true", message: "Successfully logged out"}
+    async logout(@User<RefreshToken>() token: RefreshToken) {
+        if (await this.authService.logout(token)) {
+            return { status: 'true', message: 'Successfully logged out' };
         }
-        return {status: "Invalid token"};
+        return { status: 'Invalid token' };
     }
 }
