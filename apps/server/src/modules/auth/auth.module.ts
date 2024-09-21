@@ -11,12 +11,14 @@ import { AccessTokenGuard } from './guards/access-auth.guard';
 import { AccessTokenStrategy } from './strategy/jwt.strategy';
 import { RefreshTokenStrategy } from './strategy/refresh.strategy';
 import { SessionModule } from '../session/session.module';
+import { MailModule } from '../mail/mail.module';
 
 @Module({
     imports: [
         UsersModule,
         PassportModule,
         SessionModule,
+        MailModule,
         JwtModule.registerAsync({
             global: true,
             useFactory: async (configService: ConfigService) => ({

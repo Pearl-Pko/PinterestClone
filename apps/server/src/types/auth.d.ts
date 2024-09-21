@@ -36,7 +36,7 @@ type RefreshTokenPayload = {
 }
 
 interface RefreshTokenDto extends JwtToken {
-    data: RefreshTokenPayload
+    jti: string;
 }
 
 interface RefreshToken {

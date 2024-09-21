@@ -157,10 +157,8 @@ export class AuthService {
         return this.jwtService.signAsync(
             {
                 sub: user.id,
-                data: {
-                    token_id: token_id,
-                },
-            },
+                jti: token_id
+            } as RefreshTokenDto,
             {
                 secret: this.configService.get<string>('JWT_REFRESH_SECRET'),
                 expiresIn: this.configService.get<string>(
@@ -246,7 +244,7 @@ export class AuthService {
             reset_token_expires_at: resetTokenExpiry,
         });
 
-        return { resetToken };
+        return resetToken;
     }
 
     async resetPassword(resetPasswordDto: ResetPasswordDto) {

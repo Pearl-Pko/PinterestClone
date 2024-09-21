@@ -8,6 +8,7 @@ import { PostsModule } from './modules/posts/posts.module';
 import { APP_INTERCEPTOR } from '@nestjs/core';
 import { LoggingInterceptor } from './interceptors/logger-interceptor';
 import { AuthModule } from './modules/auth/auth.module';
+import { MailModule } from './modules/mail/mail.module';
 
 @Module({
     imports: [
@@ -18,6 +19,7 @@ import { AuthModule } from './modules/auth/auth.module';
         DatabaseModule,
         PostsModule,
         AuthModule,
+        MailModule
     ],
     controllers: [AppController],
     providers: [

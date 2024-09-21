@@ -21,9 +21,13 @@ import { RefreshTokenGuard } from './guards/refresh-auth.guard';
 import { User } from '@server/decorators/user';
 import { AccessToken, RefreshToken } from '@server/types/auth';
 import { ChangePassword, ForgotPasswordDto, ResetPasswordDto } from './dto/dto';
+import { MailService } from '../mail/mail.service';
 @Controller('auth')
 export class AuthController {
-    constructor(private readonly authService: AuthService) {}
+    constructor(
+        private readonly authService: AuthService,
+        private readonly mailService: MailService,
+    ) {}
 
     @Public()
     // @UseGuards(AuthGuard("local"))
@@ -62,39 +66,56 @@ export class AuthController {
         if (await this.authService.logout(token)) {
             return { status: 'success', message: 'Successfully logged out' };
         }
-        throw new HttpException("Failed to log out", HttpStatus.NOT_FOUND);
+        throw new HttpException('Failed to log out', HttpStatus.NOT_FOUND);
     }
 
-    @Post("change-password") 
-    async changePassword(@User<AccessToken>() token: AccessToken, @Body() password: ChangePassword) {
+    @Post('change-password')
+    async changePassword(
+        @User<AccessToken>() token: AccessToken,
+        @Body() password: ChangePassword,
+    ) {
         // this.authService.
         if (await this.authService.changePassword(token, password)) {
-            return { status: 'success', message: 'Successfully changed password' };
+            return {
+                status: 'success',
+                message: 'Successfully changed password',
+            };
         }
-        throw new HttpException("Failed to changed password", HttpStatus.NOT_FOUND);
+        throw new HttpException(
+            'Failed to changed password',
+            HttpStatus.NOT_FOUND,
+        );
     }
 
     @Public()
-    @Post("forgot-password") 
+    @Post('forgot-password')
     async forgotPassword(@Body() forgotPasswordDto: ForgotPasswordDto) {
-        // this.authService.
-        return await this.authService.requestPasswordReset(forgotPasswordDto.email);
+        const resetToken = await this.authService.requestPasswordReset(
+            forgotPasswordDto.email,
+        );
+        await this.mailService.sendPasswordResetMail(
+            forgotPasswordDto.email,
+            resetToken,
+        );
 
-        // if (await this.authService.forgotPassword(forgotPasswordDto.email)) {
-        //     return { status: 'success', message: 'Successfully changed password' };
-        // }
-        // throw new HttpException("Failed to changed password", HttpStatus.NOT_FOUND);
+        return { message: 'Password reset email sent' };
     }
 
     @Public()
-    @Post("reset-password") 
+    @Post('reset-password')
     @HttpCode(HttpStatus.OK)
     async resetPassword(@Body() resetPasswordDto: ResetPasswordDto) {
-        const resetPasswordStatus = await this.authService.resetPassword(resetPasswordDto);
+        const resetPasswordStatus =
+            await this.authService.resetPassword(resetPasswordDto);
         if (resetPasswordStatus) {
-            return {status: "sucess", message: "Successfully changed password"}
+            return {
+                status: 'sucess',
+                message: 'Successfully changed password',
+            };
         }
-        throw new HttpException("Failed to reset password", HttpStatus.NOT_FOUND);
-
+        throw new HttpException(
+            'Failed to reset password',
+            HttpStatus.NOT_FOUND,
+        );
     }
 }
