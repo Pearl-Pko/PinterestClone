@@ -93,6 +93,7 @@ export class AuthController {
         const resetToken = await this.authService.requestPasswordReset(
             forgotPasswordDto.email,
         );
+        
         await this.mailService.sendPasswordResetMail(
             forgotPasswordDto.email,
             resetToken,

@@ -1,22 +1,23 @@
 import { MailerService } from '@nestjs-modules/mailer';
+import { InjectQueue } from '@nestjs/bullmq';
 import { Injectable } from '@nestjs/common';
+import { Queue } from 'bullmq';
 import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class MailService {
-    constructor(private mailService: MailerService, private configService: ConfigService) {}
+    constructor(@InjectQueue('email') private emailQueue: Queue) {}
 
     async sendPasswordResetMail(email: string, token: string) {
-
-        const resetUrl = `${this.configService.get<string>("WEB_DOMAIN")}/reset-password?token=${token}`;
-
-        await this.mailService.sendMail({
-            to: `<${email}>`,
-            subject: "Password Reset Request",
-            template: "./password-reset",
-            context: {
-                resetUrl: resetUrl
-            }
-        })
+        await this.emailQueue.add(
+            'password-reset',
+            {
+                email,
+                token,
+            },
+            {
+                priority: 2,
+            },
+        );
     }
 }

@@ -23,6 +23,7 @@ import { MailModule } from '../mail/mail.module';
             global: true,
             useFactory: async (configService: ConfigService) => ({
                 secret: configService.get<string>('JWT_ACCESS_SECRET'),
+                
                 signOptions: { expiresIn: configService.get<string>('JWT_ACCESS_TOKEN_EXPIRES_IN') },
             }),
             inject: [ConfigService],
