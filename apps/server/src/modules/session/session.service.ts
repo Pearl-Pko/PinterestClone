@@ -3,6 +3,7 @@ import { UsersService } from '../users/users.service';
 import { Prisma, Session, User } from '@prisma/client';
 import { DatabaseService } from '../database/database.service';
 import * as bcrypt from 'bcrypt';
+import { SessionNotFoundException, UserWithEmailNotFoundException, UserWithIdNotFoundException } from '@server/common/exceptions/exceptions';
 
 @Injectable()
 export class SessionService {
@@ -61,9 +62,12 @@ export class SessionService {
             });
             return true;
         } catch (error) {
-            
-            // console.error(error);
-            return false;
+            if (error instanceof Prisma.PrismaClientKnownRequestError) {
+                if (error.code === "P2025") {
+                    throw new SessionNotFoundException("Session not found");
+                }
+            }
+            throw error;
         }
     }
 
@@ -73,8 +77,12 @@ export class SessionService {
             return true;
         }
         catch (error) {
-            // console.log(error);
-            return false 
+            if (error instanceof Prisma.PrismaClientKnownRequestError) {
+                if (error.code === "P2025") {
+                    throw new UserWithIdNotFoundException(userId);
+                }
+            }
+            throw error;
         }
     }
 

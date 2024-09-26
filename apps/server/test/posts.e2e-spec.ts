@@ -8,7 +8,7 @@ import * as request from 'supertest';
 import { CreatePostDto } from '@server/modules/posts/dto/create-post.dto';
 import { INestApplication } from '@nestjs/common';
 import { AppModule } from '@server/app.module';
-import { POST, USER } from '../fixtures';
+import { POST, USER } from '../src/fixtures';
 import { prisma } from './setup/setupTests.e2e';
 
 describe('Posts', () => {

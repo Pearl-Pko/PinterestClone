@@ -16,7 +16,7 @@ import { User } from '@prisma/client';
 import { v4 as uuidv4 } from 'uuid';
 import {
     UserAlreadyExists,
-    UserNotFoundException,
+    UserWithEmailNotFoundException,
 } from '@server/common/exceptions/exceptions';
 import * as bcrypt from 'bcrypt';
 import { SessionService } from '../session/session.service';
@@ -45,9 +45,11 @@ export class AuthService {
         const user: User | null = await this.usersService.findUser({
             email: userDto.email,
         });
+
         if (!user) {
-            throw new UserNotFoundException(userDto.email);
+            throw new UserWithEmailNotFoundException(userDto.email);
         }
+
 
         const passwordMatch = await this.compareHash(
             userDto.password,
@@ -65,6 +67,7 @@ export class AuthService {
         const userExists: User | null = await this.usersService.findUser({
             email: user.email,
         });
+
         if (userExists) {
             throw new UserAlreadyExists();
         }
@@ -188,7 +191,7 @@ export class AuthService {
         });
 
         if (!user) {
-            throw new UserNotFoundException(userToken.email);
+            throw new UserWithEmailNotFoundException(userToken.email);
         }
 
         const passwordMatch = await this.compareHash(
@@ -231,7 +234,7 @@ export class AuthService {
         const user = await this.usersService.findUser({ email: email });
 
         if (!user) {
-            throw new UserNotFoundException(email);
+            throw new UserWithEmailNotFoundException(email);
         }
 
         const { resetToken, resetTokenExpiry } =
