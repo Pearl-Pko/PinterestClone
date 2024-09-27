@@ -1,5 +1,6 @@
 import {
     BadRequestException,
+    ForbiddenException,
     HttpException,
     HttpStatus,
     Injectable,
@@ -57,10 +58,10 @@ export class AuthService {
         );
 
         if (!passwordMatch) {
-            throw new NotFoundException('Incorrect password');
+            throw new ForbiddenException('Incorrect password');
         }
 
-        return this.createUserSession(user);
+        return await this.createUserSession(user);
     }
 
     async signUp(user: CreateUserDto): Promise<Tokens> {
@@ -78,7 +79,7 @@ export class AuthService {
             password: hashPassword,
         });
 
-        return this.createUserSession(newUser);
+        return await this.createUserSession(newUser);
     }
 
     async createUserSession(user: User): Promise<Tokens> {
@@ -91,7 +92,7 @@ export class AuthService {
 
         const hashedRefreshToken = await this.hashData(refreshToken);
 
-        this.sessionService.createSession({
+        await this.sessionService.createSession({
             token_hash: hashedRefreshToken,
             expires_at: new Date(),
             user_id: user.id,
@@ -200,6 +201,7 @@ export class AuthService {
         );
 
         if (!passwordMatch) {
+            console.log("not match");
             throw new HttpException('Incorrect password', HttpStatus.FORBIDDEN);
         }
 

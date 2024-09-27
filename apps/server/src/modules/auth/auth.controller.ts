@@ -34,32 +34,32 @@ export class AuthController {
     @HttpCode(HttpStatus.OK)
     @Post('login')
     async login(@Body() createUserDto: CreateUserDto) {
-        // console.log("req", req);
-        return this.authService.signIn(createUserDto);
+        return await this.authService.signIn(createUserDto);
     }
 
     @Public()
     @HttpCode(HttpStatus.OK)
     @Post('signup')
     async signup(@Body() createUserDto: CreateUserDto) {
-        // console.log("req", req);
-        return this.authService.signUp(createUserDto);
+        return await this.authService.signUp(createUserDto);
     }
 
     @Public()
     @UseGuards(RefreshTokenGuard)
+    @HttpCode(HttpStatus.OK)
     @Post('refresh')
     async refresh(@User<RefreshToken>() token: RefreshToken) {
         return { access_token: await this.authService.refreshToken(token) };
-        // console.log("refresh", req.user.refreshToken)
     }
 
     @Get('profile')
+    @HttpCode(HttpStatus.OK)
     getProfile(@User<AccessToken>() token: AccessToken) {
         return token;
     }
 
     @Public()
+    @HttpCode(HttpStatus.OK)
     @UseGuards(RefreshTokenGuard)
     @Post('logout')
     async logout(@User<RefreshToken>() token: RefreshToken) {
@@ -70,6 +70,7 @@ export class AuthController {
     }
 
     @Post('change-password')
+    @HttpCode(HttpStatus.OK)
     async changePassword(
         @User<AccessToken>() token: AccessToken,
         @Body() password: ChangePassword,
@@ -89,6 +90,7 @@ export class AuthController {
 
     @Public()
     @Post('forgot-password')
+    @HttpCode(HttpStatus.OK)
     async forgotPassword(@Body() forgotPasswordDto: ForgotPasswordDto) {
         const resetToken = await this.authService.requestPasswordReset(
             forgotPasswordDto.email,

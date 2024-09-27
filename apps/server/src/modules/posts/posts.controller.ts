@@ -10,16 +10,18 @@ import {
 } from '@nestjs/common';
 import { PostsService } from './posts.service';
 import { CreatePostDto } from './dto/create-post.dto';
-import { UpdatePostDto } from './dto/update-post.dto';
 import { Post as PostEntity, Prisma } from '@prisma/client';
+import { User } from '@server/decorators/user';
+import { AccessToken } from '@server/types/auth';
+import { UpdatePostDto } from './dto/update-post.dto';
 
 @Controller('posts')
 export class PostsController {
     constructor(private readonly postsService: PostsService) {}
 
     @Post()
-    async create(@Body() createPostDto: CreatePostDto): Promise<PostEntity> {
-        return await this.postsService.create(createPostDto);
+    async create(@User<AccessToken>() token: AccessToken,  @Body() createPostDto: CreatePostDto): Promise<PostEntity> {
+        return await this.postsService.create({...createPostDto, author_id: token.id});
     }
 
     @Patch(':id')

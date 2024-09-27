@@ -1,7 +1,7 @@
 import { Prisma } from "@prisma/client";
 import { IsNotEmpty, IsOptional, IsString } from "class-validator";
 
-export class CreatePostDto implements Omit<Prisma.PostCreateInput, "author"> {
+export class CreatePostDto implements Omit<Prisma.PostUncheckedCreateInput, "author_id"> {
     @IsOptional()
     title: string;
     
@@ -17,6 +17,4 @@ export class CreatePostDto implements Omit<Prisma.PostCreateInput, "author"> {
     @IsOptional()
     tags?: string;
     
-    @IsNotEmpty()
-    author_id: string;
 }

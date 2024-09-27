@@ -1,15 +1,15 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreatePostDto } from './dto/create-post.dto';
-import { UpdatePostDto } from './dto/update-post.dto';
 import { DatabaseService } from '@server/modules/database/database.service';
 import { Post as PostEntity, Prisma } from '@prisma/client';
 import { AuthorNotFoundException } from '@server/common/exceptions/exceptions';
+import { UpdatePostDto } from './dto/update-post.dto';
 
 @Injectable()
 export class PostsService {
     constructor(private readonly database: DatabaseService) {}
 
-    async create(data: CreatePostDto): Promise<PostEntity> {
+    async create(data: Prisma.PostUncheckedCreateInput): Promise<PostEntity> {
         const {author_id, ...rest} = data;
 
         try {
