@@ -6,6 +6,27 @@ import { JwtService } from '@nestjs/jwt';
 import { RefreshTokenDto } from '@server/types/auth';
 import { ConfigService } from '@nestjs/config';
 import { HttpStatus } from '@nestjs/common';
+import { Job, Queue } from 'bullmq';
+import { getQueueToken } from '@nestjs/bullmq';
+import Mail from 'nodemailer/lib/mailer';
+
+async function retry<U>(
+    fn: () => U | Promise<U> | null | undefined,
+    maxAttempts = 3,
+    interval = 500,
+): Promise<U | null> {
+    let attempts = 0;
+    while (attempts < maxAttempts) {
+        // return retry();
+        const result = await fn();
+
+        if (result) return result;
+
+        await new Promise((resolve) => setTimeout(resolve, interval));
+        attempts += 1;
+    }
+    return null;
+}
 
 describe('Auth', () => {
     describe('Sign Up', () => {
@@ -222,6 +243,8 @@ describe('Auth', () => {
 
     describe('Password Recovery', () => {
         it('Should handle password recovery flow', async () => {
+            const emailQueue = app.get<Queue>(getQueueToken('email'));
+
             const signupResponse = await request(app.getHttpServer())
                 .post('/auth/signup')
                 .send(MockUserDto)
@@ -229,16 +252,41 @@ describe('Auth', () => {
 
             const { refresh_token } = signupResponse.body;
 
+            // const emailSentPromise = new Promise<void>((resolve) => {
+            //     mh.on('latest', (email) => {
+            //       if (email.to === 'ksa@da.com') {
+            //         resolve();
+            //       }
+            //     });
+            //   });
+
+            const jobProcessedPromise = new Promise<void>((resolve) => {
+                emailQueue.on('progress', (job: Job) => {
+                    if (job.name === 'password-reset') {
+                        console.log('yeah');
+                        resolve();
+                    }
+                });
+            });
+
             await request(app.getHttpServer())
                 .post('/auth/forgot-password')
                 .send({ email: MockUserDto.email })
                 .expect(200);
 
-            await new Promise((resolve) => setTimeout(resolve, 1000));
+            const job = await emailQueue.getJob('password-reset');
 
-            const result = await mh.latestTo('ksa@da.com');
+            // await new Promise((resolve) => setTimeout(resolve, 1000));
 
-            const match = result.html.match(/\?token=(.+?)"/)!;
+            // await jobProcessedPromise;
+
+            // const result = await mh.latestTo('ksa@da.com');
+            const result = await retry(async () => await mh.latestTo("ksa@da.com"), 5)
+
+            expect(result).toBeDefined();
+            
+
+            const match = result!.html.match(/\?token=(.+?)"/)!;
             expect(match).toBeDefined();
 
             const token = match[1];
