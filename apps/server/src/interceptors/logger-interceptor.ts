@@ -6,26 +6,33 @@ import {
     Logger,
 } from '@nestjs/common';
 import { Observable } from 'rxjs';
-import { finalize } from 'rxjs/operators';
+import { catchError, finalize, tap } from 'rxjs/operators';
+import { Response } from 'express';
 
 @Injectable()
 export class LoggingInterceptor implements NestInterceptor {
     private logger = new Logger('HTTP');
     intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
         const req = context.switchToHttp().getRequest();
-        const res = context.switchToHttp().getResponse();
         const { ip, method, originalUrl } = req;
         const userAgent = req.get('user-agent') || '';
-
+        const res = context.switchToHttp().getResponse() as Response;
         const now = Date.now();
 
         return next.handle().pipe(
-            finalize(() => {
-                const { statusCode } = res;
-                const responseTime = Date.now() - now;
-                this.logger.log(
-                    `${method} ${originalUrl} ${statusCode} - ${responseTime}ms - ${userAgent} ${ip}`,
-                );
+            tap({
+                next: () => {
+                    const responseTime = Date.now() - now;
+                    this.logger.log(
+                        `${method} ${originalUrl} ${res.statusCode} - ${responseTime}ms - ${userAgent} ${ip}`,
+                    );
+                },
+                error: (error) => {
+                    const responseTime = Date.now() - now;
+                    this.logger.error(
+                        `${method} ${originalUrl} ${error.status || 500} - ${responseTime}ms - ${userAgent} ${ip}`,
+                    );
+                },
             }),
         );
     }

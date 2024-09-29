@@ -24,7 +24,8 @@ import { User } from '@server/decorators/user';
 import { AccessToken, RefreshToken } from '@server/types/auth';
 import { ChangePassword, ForgotPasswordDto, ResetPasswordDto } from './dto/dto';
 import { MailService } from '../mail/mail.service';
-import { TokenInterceptor } from '@server/interceptors/auth-cookie-interceptor';
+import { AddSessionInterceptor } from '@server/interceptors/add-session-interceptor';
+import { RemoveSessionInterceptor } from '@server/interceptors/delete-session-interceptor';
 @Controller('auth')
 export class AuthController {
     constructor(
@@ -34,7 +35,7 @@ export class AuthController {
 
     @Public()
     @HttpCode(HttpStatus.OK)
-    @UseInterceptors(TokenInterceptor)
+    @UseInterceptors(AddSessionInterceptor)
     @Post('login')
     async login(@Body() createUserDto: CreateUserDto) {
         return await this.authService.signIn(createUserDto);
@@ -42,7 +43,7 @@ export class AuthController {
 
     @Public()
     @HttpCode(HttpStatus.OK)
-    @UseInterceptors(TokenInterceptor)
+    @UseInterceptors(AddSessionInterceptor)
     @Post('signup')
     async signup(@Body() createUserDto: CreateUserDto) {
        return await this.authService.signUp(createUserDto);
@@ -51,7 +52,7 @@ export class AuthController {
     @Public()
     @UseGuards(RefreshTokenGuard)
     @HttpCode(HttpStatus.OK)
-    @UseInterceptors(TokenInterceptor)
+    @UseInterceptors(AddSessionInterceptor)
     @Post('refresh')
     async refresh(@User<RefreshToken>() token: RefreshToken) {
         return await this.authService.refreshToken(token);
@@ -66,9 +67,11 @@ export class AuthController {
     @Public()
     @HttpCode(HttpStatus.OK)
     @UseGuards(RefreshTokenGuard)
+    @UseInterceptors(RemoveSessionInterceptor)
     @Post('logout')
     async logout(@User<RefreshToken>() token: RefreshToken) {
         if (await this.authService.logout(token)) {
+            
             return { status: 'success', message: 'Successfully logged out' };
         }
         throw new HttpException('Failed to log out', HttpStatus.NOT_FOUND);

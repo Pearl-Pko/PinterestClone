@@ -13,6 +13,7 @@ import { exec } from 'child_process';
 import mailhog, { MailHog } from 'mailhog';
 import { GenericContainer, StartedTestContainer } from 'testcontainers';
 import { promisify } from 'util';
+import { MockLogger } from './MockLoggerService';
 
 const execAsync = promisify(exec);
 let prisma: PrismaClient;

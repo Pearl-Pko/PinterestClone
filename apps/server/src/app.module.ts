@@ -37,10 +37,10 @@ import { BullConfigService } from './config/bull.config';
     controllers: [AppController],
     providers: [
         AppService,
-        {
-            provide: APP_INTERCEPTOR,
-            useClass: LoggingInterceptor,
-        },
+        // {
+        //     provide: APP_INTERCEPTOR,
+        //     useClass: LoggingInterceptor,
+        // },
     ],
 })
 export class AppModule {}

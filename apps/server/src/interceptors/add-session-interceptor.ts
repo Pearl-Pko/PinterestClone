@@ -12,7 +12,7 @@ import { AccessTokenDTO, RefreshTokenDto, Tokens } from '@server/types/auth';
 import { JwtService } from '@nestjs/jwt';
 
 @Injectable()
-export class TokenInterceptor implements NestInterceptor {
+export class AddSessionInterceptor implements NestInterceptor {
     constructor(private readonly jwtService: JwtService) {}
 
     intercept(context: ExecutionContext, next: CallHandler): Observable<any> {

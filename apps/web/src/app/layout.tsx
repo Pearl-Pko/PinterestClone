@@ -4,6 +4,7 @@ import NotificationsIcon from "@web/public/notifications.svg";
 import MessagingIcon from "@web/public/messaging.svg";
 import PinterestIcon from "@web/public/pinterest-logo.svg";
 import { SessionProvider } from "../context/SessionContext";
+import AppProvider from "./AppProvider";
 
 export default function RootLayout({
   children,
@@ -11,7 +12,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <SessionProvider>
+    <AppProvider>
       <html lang="en">
         <body>
           <div className="p-4 flex gap-5 items-center">
@@ -27,6 +28,6 @@ export default function RootLayout({
           {children}
         </body>
       </html>
-    </SessionProvider>
+    </AppProvider>
   );
 }
