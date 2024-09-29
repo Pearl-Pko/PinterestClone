@@ -6,6 +6,7 @@ import PrimaryButton from "@web/src/components/common/PrimaryButton";
 import { CreateUserSchema, LoginUserSchema } from "@web/src/schema/user";
 import { useLogin, useSignUp } from "@web/src/service/useUser";
 import { AxiosError } from "axios";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import React, { useEffect } from "react";
 import { useForm } from "react-hook-form";
@@ -40,11 +41,10 @@ export default function page() {
           onSubmit={handleSubmit(mutate)}
           // action={handleSubmi)}
         >
-          <p className="text-3xl font-semibold">Sign up to see more </p>
-          <p className="text-gray-600">Discovery starts here</p>
+          <p className="text-3xl font-semibold">Log in to see more </p>
           <div className="flex flex-col gap-3 w-full mt-8 mb-4">
             <div>
-              <label htmlFor="email">Email Address</label>
+              <label htmlFor="email">Email address</label>
               <input
                 id="email"
                 {...register("email")}
@@ -61,7 +61,7 @@ export default function page() {
                 id="password"
                 {...register("password")}
                 className="input"
-                placeholder="Enter password"
+                placeholder="Password"
               />
               {errors.password?.message && (
                 <ErrorInputField message={errors.password.message} />
@@ -81,7 +81,7 @@ export default function page() {
             // disabled={!isValid}
             // loading={isSubmitting}
           />
-          <p>Already a member? Log in</p>
+          <p className="mt-5 font-medium text-sm text-[#777777]">Not on Pinterest yet? <Link href="/signup" className="text-black">Sign up</Link></p>
         </form>
       </div>
     </div>

@@ -27,6 +27,18 @@ export async function clearSession() {
     cookie.delete("refresh_token")
 }
 
+export async function refreshToken() {
+    const session = cookies();
+    const refreshToken = session.get("refresh_token")
+    console.log(refreshToken, "refresh");
+
+    await axios.post(`${process.env.API_URL}/auth/refresh`, {
+        headers: {
+            Authorization: `Bearer ${refreshToken}`
+        }
+    })
+}
+
 export async function getSession() {
 
 }

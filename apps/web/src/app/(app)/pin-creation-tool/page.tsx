@@ -6,12 +6,9 @@ import UploadIcon from "@web/public/upload.svg";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import api from "@web/src/utils/api";
-import clsx from "clsx";
-import { z } from "zod";
-
 import ErrorIcon from "@web/public/error.svg";
 import PrimaryButton from "@web/src/components/common/PrimaryButton";
-import { ProductSchema } from "@web/src/schema/user";
+import { PostsSchema } from "@web/src/schema/user";
 
 export default function page() {
   const {
@@ -20,16 +17,15 @@ export default function page() {
     setError,
     watch,
     formState: { errors, isSubmitting },
-  } = useForm<ProductSchema>({ resolver: zodResolver(ProductSchema) });
+  } = useForm<PostsSchema>({ resolver: zodResolver(PostsSchema) });
   useEffect(() => {
     // setError("external_link", {type: "dew", message: "Invalid url"})
   }, []);
-  const onSubmit = async (data: ProductSchema) => {
+  const onSubmit = async (data: PostsSchema) => {
     await new Promise((resolve) => setTimeout(resolve, 3000));
     await api.post("/posts", {
       ...data,
-      author_id: "0313bcd5-46cc-4d33-8295-c9ce9cae85bc",
-      image_url: "dklekw",
+      image_url: "same here",
     });
   };
 
@@ -47,18 +43,7 @@ export default function page() {
       >
         <div className="p-4 border-2 border-l-0 flex justify-between items-center">
           <p className="font-semibold text-lg">Create Pin</p>
-          <button
-          // type="submit"
-          // className={clsx(
-          //     "btn-primary",
-          //     isSubmitting && "opacity-30"
-          // )}
-
-          // disabled={isSubmitting}
-          >
-            Publish
-          </button>
-          <PrimaryButton submitting={isSubmitting} text="Publish" />
+          <PrimaryButton type="submit" text="Publish" />
         </div>
         <div className="grid my-10 mx-auto place-content-center grid-cols-5 max-w-[1000px] gap-10">
           <div className="col-span-2 flex gap-5 flex-col">

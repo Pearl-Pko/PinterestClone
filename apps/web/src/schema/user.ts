@@ -14,3 +14,16 @@ export const CreateUserSchema = LoginUserSchema.extend({
 
 export type CreateUserSchema = z.infer<typeof CreateUserSchema>;
 export type LoginUserSchema = z.infer<typeof LoginUserSchema>;
+
+export const PostsSchema = z.object({
+  title: z.string().optional(),
+  description: z.string().optional(),
+  external_link: z
+    .string()
+    .url("That url is not valid. Please try again")
+    .optional()
+    .or(z.literal("")),
+  tags: z.string().optional(),
+});
+
+export type PostsSchema = z.infer<typeof PostsSchema>;
