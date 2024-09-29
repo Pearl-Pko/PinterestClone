@@ -18,6 +18,7 @@ describe('Posts', () => {
             .post('/auth/signup')
             .send(MockUserDto)
             .expect(HttpStatus.OK);
+
         const { access_token } = signupResponse.body;
         accessToken = access_token;
     });

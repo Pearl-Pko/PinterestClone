@@ -51,7 +51,6 @@ export class AuthService {
             throw new UserWithEmailNotFoundException(userDto.email);
         }
 
-
         const passwordMatch = await this.compareHash(
             userDto.password,
             user.password,
@@ -92,9 +91,12 @@ export class AuthService {
 
         const hashedRefreshToken = await this.hashData(refreshToken);
 
+        const decodedRefreshToken = this.jwtService.decode(
+            refreshToken,
+        ) as RefreshTokenDto;
         await this.sessionService.createSession({
             token_hash: hashedRefreshToken,
-            expires_at: new Date(),
+            expires_at: new Date(decodedRefreshToken.exp * 1000),
             user_id: user.id,
             id: token_id,
         });
@@ -161,7 +163,7 @@ export class AuthService {
         return this.jwtService.signAsync(
             {
                 sub: user.id,
-                jti: token_id
+                jti: token_id,
             } as RefreshTokenDto,
             {
                 secret: this.configService.get<string>('JWT_REFRESH_SECRET'),
@@ -172,14 +174,14 @@ export class AuthService {
         );
     }
 
-    async refreshToken(refreshToken: RefreshToken) {
+    async refreshToken(refreshToken: RefreshToken): Promise<Tokens> {
         const user = await this.sessionService.verifySession(
             refreshToken.id,
             refreshToken.token_id,
             refreshToken.refresh_token,
         );
 
-        return this.generateAccessToken(user);
+        return { access_token: await this.generateAccessToken(user) };
     }
 
     async logout(refreshToken: RefreshToken) {
@@ -201,7 +203,7 @@ export class AuthService {
         );
 
         if (!passwordMatch) {
-            console.log("not match");
+            console.log('not match');
             throw new HttpException('Incorrect password', HttpStatus.FORBIDDEN);
         }
 
@@ -221,7 +223,7 @@ export class AuthService {
         const resetTokenExpiry = new Date(Date.now() + 3600 * 1000);
         return { resetToken, resetTokenExpiry };
     }
-    
+
     generateHMac(token: string) {
         const hmac = createHmac(
             'sha256',
@@ -254,10 +256,11 @@ export class AuthService {
 
     async resetPassword(resetPasswordDto: ResetPasswordDto) {
         const hashedResetToken = this.generateHMac(resetPasswordDto.token);
-        const user = await this.usersService.findUserByResetToken(hashedResetToken);
+        const user =
+            await this.usersService.findUserByResetToken(hashedResetToken);
 
         if (!user) {
-            throw new UnauthorizedException("Invalid or expired token");
+            throw new UnauthorizedException('Invalid or expired token');
         }
 
         if (!user.reset_token && user.reset_token_expires_at! < new Date()) {

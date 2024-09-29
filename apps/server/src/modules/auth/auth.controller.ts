@@ -11,6 +11,8 @@ import {
     UseGuards,
     Request,
     HttpException,
+    Res,
+    UseInterceptors,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { AuthGuard } from '@nestjs/passport';
@@ -22,6 +24,7 @@ import { User } from '@server/decorators/user';
 import { AccessToken, RefreshToken } from '@server/types/auth';
 import { ChangePassword, ForgotPasswordDto, ResetPasswordDto } from './dto/dto';
 import { MailService } from '../mail/mail.service';
+import { TokenInterceptor } from '@server/interceptors/auth-cookie-interceptor';
 @Controller('auth')
 export class AuthController {
     constructor(
@@ -30,8 +33,8 @@ export class AuthController {
     ) {}
 
     @Public()
-    // @UseGuards(AuthGuard("local"))
     @HttpCode(HttpStatus.OK)
+    @UseInterceptors(TokenInterceptor)
     @Post('login')
     async login(@Body() createUserDto: CreateUserDto) {
         return await this.authService.signIn(createUserDto);
@@ -39,17 +42,19 @@ export class AuthController {
 
     @Public()
     @HttpCode(HttpStatus.OK)
+    @UseInterceptors(TokenInterceptor)
     @Post('signup')
     async signup(@Body() createUserDto: CreateUserDto) {
-        return await this.authService.signUp(createUserDto);
+       return await this.authService.signUp(createUserDto);
     }
 
     @Public()
     @UseGuards(RefreshTokenGuard)
     @HttpCode(HttpStatus.OK)
+    @UseInterceptors(TokenInterceptor)
     @Post('refresh')
     async refresh(@User<RefreshToken>() token: RefreshToken) {
-        return { access_token: await this.authService.refreshToken(token) };
+        return await this.authService.refreshToken(token);
     }
 
     @Get('profile')
@@ -95,7 +100,7 @@ export class AuthController {
         const resetToken = await this.authService.requestPasswordReset(
             forgotPasswordDto.email,
         );
-        
+
         await this.mailService.sendPasswordResetMail(
             forgotPasswordDto.email,
             resetToken,

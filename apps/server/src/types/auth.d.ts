@@ -2,8 +2,8 @@ import { Prisma , User} from "@prisma/client";
 import { User } from "@server/modules/users/entities/user.entity";
 
 type Tokens = {
-    access_token: string; 
-    refresh_token: string
+    access_token?: string; 
+    refresh_token?: string
 }
 
 type JwtToken = {
