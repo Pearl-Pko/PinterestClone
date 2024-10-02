@@ -7,12 +7,9 @@ import {
     NotFoundException,
     UnauthorizedException,
 } from '@nestjs/common';
-import { CreateAuthDto } from './dto/create-auth.dto';
-import { UpdateAuthDto } from './dto/update-auth.dto';
 import { UsersService } from '../users/users.service';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
-import { CreateUserDto } from '../users/dto/create-user.dto';
 import { User } from '@prisma/client';
 import { v4 as uuidv4 } from 'uuid';
 import {
@@ -28,9 +25,10 @@ import {
     RefreshTokenDto,
     Tokens,
 } from '@server/types/auth';
-import { ChangePassword, ResetPasswordDto } from './dto/dto';
+// import { ChangePassword, ResetPasswordDto } from './dto/dto';
 import { DatabaseService } from '../database/database.service';
 import { createHmac, randomBytes } from 'crypto';
+import { ChangePassword, CreateUserDto, ResetPasswordDto } from '@schema/user';
 
 @Injectable()
 export class AuthService {

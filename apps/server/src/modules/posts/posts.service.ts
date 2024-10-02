@@ -1,10 +1,8 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { CreatePostDto } from './dto/create-post.dto';
 import { DatabaseService } from '@server/modules/database/database.service';
 import { Post as PostEntity, Prisma } from '@prisma/client';
 import { AuthorNotFoundException } from '@server/common/exceptions/exceptions';
-import { UpdatePostDto } from './dto/update-post.dto';
-
+import { CreatePostDto, UpdatePostDto } from '@schema/post';
 @Injectable()
 export class PostsService {
     constructor(private readonly database: DatabaseService) {}

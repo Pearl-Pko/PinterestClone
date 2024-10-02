@@ -18,14 +18,14 @@ import { AuthService } from './auth.service';
 import { AuthGuard } from '@nestjs/passport';
 import { AccessTokenGuard } from './guards/access-auth.guard';
 import { Public } from '@server/constants/constants';
-import { CreateUserDto } from '../users/dto/create-user.dto';
 import { RefreshTokenGuard } from './guards/refresh-auth.guard';
 import { User } from '@server/decorators/user';
 import { AccessToken, RefreshToken } from '@server/types/auth';
-import { ChangePassword, ForgotPasswordDto, ResetPasswordDto } from './dto/dto';
+// import { ChangePassword, ForgotPasswordDto, ResetPasswordDto } from './dto/dto';
 import { MailService } from '../mail/mail.service';
 import { AddSessionInterceptor } from '@server/interceptors/add-session-interceptor';
 import { RemoveSessionInterceptor } from '@server/interceptors/delete-session-interceptor';
+import {ChangePassword, CreateUserDto, ForgotPasswordDto, ResetPasswordDto} from "@schema/user"
 @Controller('auth')
 export class AuthController {
     constructor(

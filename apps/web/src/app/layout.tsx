@@ -12,9 +12,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <AppProvider>
-      <html lang="en">
-        <body>
+    <html lang="en">
+      <body>
+        <AppProvider>
           <div className="p-4 flex gap-5 items-center">
             <PinterestIcon fill="#E60023" />
             <p>Home</p>
@@ -26,8 +26,8 @@ export default function RootLayout({
             <MessagingIcon fill="grey" />
           </div>
           {children}
-        </body>
-      </html>
-    </AppProvider>
+        </AppProvider>
+      </body>
+    </html>
   );
 }

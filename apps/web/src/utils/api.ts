@@ -1,3 +1,4 @@
+import "client-only"
 import axios, { AxiosError, AxiosRequestConfig } from "axios";
 import { useRefreshToken } from "../service/useUser";
 import { clearSession } from "../actions/auth";

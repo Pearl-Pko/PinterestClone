@@ -1,7 +1,6 @@
 import { User } from '@prisma/client';
-import { CreatePostDto } from '@server/modules/posts/dto/create-post.dto';
-import { UpdatePostDto } from '@server/modules/posts/dto/update-post.dto';
-import { CreateUserDto } from '@server/modules/users/dto/create-user.dto';
+import { CreatePostDto, UpdatePostDto } from '@schema/post';
+import { CreateUserDto } from '@schema/user';
 
 export const MockUserEntity: User = {
     id: '93',
@@ -26,8 +25,13 @@ export const MockUserDto: CreateUserDto = {
     password: 'real',
 };
 
+type NullToUndefined<T> = {
+    [K in keyof T]: T[K] extends null ? undefined : T[K];
+  };
+
 export const MockPost: CreatePostDto = {
     title: "dsz",
-    image_url: "kelw e"
+    image_url: "kelw e",
+
 }
 

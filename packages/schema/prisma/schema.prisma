@@ -43,7 +43,7 @@ model Account {
 }
 
 model Session {
-  id         String @unique
+  id         String   @unique
   token_hash String   @unique
   expires_at DateTime
   user       User     @relation(fields: [user_id], references: [id])

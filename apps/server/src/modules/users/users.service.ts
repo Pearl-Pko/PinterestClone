@@ -1,8 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { CreateUserDto } from './dto/create-user.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
 import { DatabaseService } from '@server/modules/database/database.service';
 import { Prisma, User } from '@prisma/client';
+import { CreateUserDto } from '@schema/user';
 
 @Injectable()
 export class UsersService {
@@ -11,18 +10,21 @@ export class UsersService {
     async findUser({
         username,
         email,
+        id,
     }: {
         username?: string;
         email?: string;
+        id?: string;
     }): Promise<User | null> {
-        if (!username && !email)
-            throw new Error('Username or email must be given');
+        if (!username && !email && !id)
+            throw new Error('Username or email or id must be given');
 
         return await this.database.user.findFirst({
             where: {
                 OR: [
                     { email: { equals: email, mode: 'insensitive' } },
                     { username: username },
+                    { id: id },
                 ],
             },
         });

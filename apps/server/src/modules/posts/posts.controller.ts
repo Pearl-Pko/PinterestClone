@@ -9,12 +9,10 @@ import {
     NotFoundException,
 } from '@nestjs/common';
 import { PostsService } from './posts.service';
-import { CreatePostDto } from './dto/create-post.dto';
 import { Post as PostEntity, Prisma } from '@prisma/client';
 import { User } from '@server/decorators/user';
 import { AccessToken } from '@server/types/auth';
-import { UpdatePostDto } from './dto/update-post.dto';
-
+import {CreatePostDto, UpdatePostDto} from "@schema/post"
 @Controller('posts')
 export class PostsController {
     constructor(private readonly postsService: PostsService) {}
