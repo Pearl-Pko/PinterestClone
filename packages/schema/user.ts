@@ -2,6 +2,7 @@ import { User, Post, Prisma, $Enums } from "@prisma/client";
 import {z} from "zod"
 import { IsEmail, IsEnum, IsNotEmpty, IsOptional, IsUUID,  } from 'class-validator';
 import { PickType } from "nestjs-mapped-types";
+import { Exclude } from "class-transformer";
 
 // z.object({
 //     id: z.string(),
@@ -66,6 +67,7 @@ export class UserEntity implements User {
     website: string | null;
 
     @IsNotEmpty()
+    @Exclude()
     password: string;
 
     @IsOptional()
@@ -84,12 +86,20 @@ export class UserEntity implements User {
     updated_at: Date;
 
     @IsOptional()
+    @Exclude()
     reset_token: string | null;
 
 
     @IsOptional()
+    @Exclude()
     reset_token_expires_at: Date | null;
+
+    constructor(partial: Partial<UserEntity>) {
+        Object.assign(this, partial);
+      }
 } 
+
+type a = Partial<UserEntity>
 
 
 export class CreateUserDto extends PickType(UserEntity, ["email", "password"] as const) implements Omit<Prisma.UserCreateInput, 'username'> {}

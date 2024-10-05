@@ -10,7 +10,6 @@ import { useRouter } from "next/navigation";
 import React, { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { classValidatorResolver } from '@hookform/resolvers/class-validator';
-import { LoginUserSchema } from "@web/src/schema/user";
 import { ChangePassword, CreateUserDto, LoginUserDto, ResetPasswordDto } from '@schema/user';
 
 

@@ -26,7 +26,7 @@ import { MailService } from '../mail/mail.service';
 import { AddSessionInterceptor } from '@server/interceptors/add-session-interceptor';
 import { RemoveSessionInterceptor } from '@server/interceptors/delete-session-interceptor';
 import {ChangePassword, CreateUserDto, ForgotPasswordDto, ResetPasswordDto} from "@schema/user"
-@Controller('auth')
+@Controller('user')
 export class AuthController {
     constructor(
         private readonly authService: AuthService,
@@ -56,12 +56,6 @@ export class AuthController {
     @Post('refresh')
     async refresh(@User<RefreshToken>() token: RefreshToken) {
         return await this.authService.refreshToken(token);
-    }
-
-    @Get('profile')
-    @HttpCode(HttpStatus.OK)
-    getProfile(@User<AccessToken>() token: AccessToken) {
-        return token;
     }
 
     @Public()

@@ -8,22 +8,34 @@ import {
     Delete,
     HttpCode,
     HttpStatus,
+    UseInterceptors,
+    ClassSerializerInterceptor,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { Prisma } from '@prisma/client';
 import { User } from '@server/decorators/user';
 import { AccessToken } from '@server/types/auth';
-import { CreateUserDto } from '@schema/user';
+import { CreateUserDto, UserEntity } from '@schema/user';
+import {
+    UserWithEmailNotFoundException,
+    UserWithIdNotFoundException,
+} from '@server/common/exceptions/exceptions';
 
-@Controller('users')
+@Controller('user')
 export class UsersController {
     constructor(private readonly usersService: UsersService) {}
 
-
-    @Get("profile") 
+    @Get('profile')
     @HttpCode(HttpStatus.OK)
-    getProfile(@User<AccessToken>() token: AccessToken) {
-        console.log("token", token.id);
-        return this.usersService.findUser({id: token.id});
+    @UseInterceptors(ClassSerializerInterceptor)
+    async getProfile(@User<AccessToken>() token: AccessToken) {
+        console.log('token', token.id);
+        const user = await this.usersService.findUser({ id: token.id });
+
+        if (!user) {
+            throw new UserWithIdNotFoundException(token.id);
+        }
+
+        return new UserEntity(user);
     }
 }
