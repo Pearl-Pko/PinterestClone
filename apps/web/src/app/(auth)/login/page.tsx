@@ -20,9 +20,9 @@ export default function page() {
     handleSubmit,
     setError,
     formState: { errors, isSubmitting, isValid, isDirty },
-  } = useForm<CreateUserDto>({ resolver: classValidatorResolver(CreateUserDto) });
+  } = useForm<LoginUserDto>({ resolver: classValidatorResolver(LoginUserDto) });
 
-  const mutate = async (user: CreateUserDto) => {
+  const mutate = async (user: LoginUserDto) => {
     try {
     
       await useLogin(user);

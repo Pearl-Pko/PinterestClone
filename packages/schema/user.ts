@@ -1,48 +1,8 @@
 import { User, Post, Prisma, $Enums } from "@prisma/client";
 import {z} from "zod"
-import { IsEmail, IsEnum, IsNotEmpty, IsOptional, IsUUID,  } from 'class-validator';
+import { IsDate, IsEmail, IsEnum, IsNotEmpty, IsOptional, IsUUID,  } from 'class-validator';
 import { PickType } from "nestjs-mapped-types";
 import { Exclude } from "class-transformer";
-
-// z.object({
-//     id: z.string(),
-//     email: z.string().email(),
-//     username: z.string(),
-//     first_name: z.string(),
-//     last_name: z.string(),
-//     about: z.string(),
-//     website: z.string(), 
-//     password: z.string(),
-//     date_of_birth: z.string(),
-//     gender: z.string(),
-//     country: z.string(),
-//     created_at: z.string().datetime(),
-//     updated_at: z.string().datetime(),
-//     reset_token: z.string(), 
-//     reset_token_expires_at: z.string().datetime()
-// }) satisfies z.ZodType<User>
-// const GenderEnum = z.enum(['Male', 'Female', 'Other']); 
-
-// export const UserEntity = z.object({
-//     id: z.string().uuid(), 
-//     email: z.string().email(), 
-//     username: z.string(), 
-//     first_name: z.string().nullable(),
-//     last_name: z.string().nullable(), 
-//     about: z.string().nullable(),
-//     website: z.string().url().nullable(),
-//     password: z.string(), 
-//     date_of_birth: z.coerce.date().nullable(), 
-//     gender: GenderEnum.nullable(), 
-//     country: z.string().nullable(), 
-//     created_at: z.date(), 
-//     updated_at: z.date(), //
-//     reset_token: z.string().nullable(), 
-//     reset_token_expires_at: z.coerce.date().nullable(), 
-  
-// }) satisfies z.ZodType<User>
-
-
 
 export class UserEntity implements User {
     @IsUUID()
@@ -67,7 +27,6 @@ export class UserEntity implements User {
     website: string | null;
 
     @IsNotEmpty()
-    @Exclude()
     password: string;
 
     @IsOptional()
@@ -79,25 +38,35 @@ export class UserEntity implements User {
     @IsOptional()
     country: string | null;
 
-    @IsNotEmpty()
+    @IsDate()
     created_at: Date;
 
+    @IsDate()
     @IsNotEmpty()
     updated_at: Date;
 
     @IsOptional()
-    @Exclude()
     reset_token: string | null;
 
 
     @IsOptional()
-    @Exclude()
     reset_token_expires_at: Date | null;
 
     constructor(partial: Partial<UserEntity>) {
         Object.assign(this, partial);
       }
 } 
+
+export class UserEntityDto extends UserEntity {
+    @Exclude()
+    password: string;
+
+    @Exclude() 
+    reset_token: string | null;
+
+    @Exclude()
+    reset_token_expires_at: Date | null;
+}
 
 type a = Partial<UserEntity>
 

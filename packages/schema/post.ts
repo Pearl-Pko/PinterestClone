@@ -1,6 +1,6 @@
-import { OmitType, PartialType } from "@nestjs/mapped-types";
+import { OmitType, PartialType } from "nestjs-mapped-types";
 import {Post} from "@prisma/client"
-import { IsDate, IsNotEmpty, IsOptional, IsUUID } from "class-validator"
+import { IsDate, IsNotEmpty, IsOptional, IsString, IsUrl, IsUUID } from "class-validator"
 
 
   type OptionalNullableProperties<T> = {
@@ -10,20 +10,38 @@ import { IsDate, IsNotEmpty, IsOptional, IsUUID } from "class-validator"
     [K in keyof T as null extends T[K] ? K : never]?: T[K]
   };
 
-type Diddy = OptionalNullableProperties<Post> 
+type NullablePost = OptionalNullableProperties<Post> 
 
-export class PostEntity implements Diddy {
-    author_id: string;
-    created_at: Date;
-    description?: string | null | undefined;
-    external_link?: string | null | undefined;
-    id: string;
-    image_url: string;
-    tags?: string | null | undefined;
-    title?: string | null | undefined;
-    updated_at: Date;
+export class PostEntity implements NullablePost {
+  @IsString()
+  id: string;
+
+  @IsOptional()
+  title?: string | null | undefined;
+
+  @IsUrl()
+  image_url: string;
+
+  @IsUrl({}, {message: "Link must be a url"})
+  @IsOptional()
+  external_link?: string | null | undefined;
+
+  @IsOptional()
+  description?: string | null | undefined;
+
+  @IsOptional()
+  tags?: string | null | undefined;
+
+  @IsString()
+  author_id: string;
+
+  @IsDate()
+  created_at: Date;
+
+  @IsDate()
+  updated_at: Date;
 }
 
-export class CreatePostDto extends OmitType(PostEntity, ["author_id", "updated_at", "created_at", "id"]) {}
+export class CreatePostDto extends OmitType(PostEntity, ["author_id", "updated_at", "created_at", "id", "image_url"]) {}
 
 export class UpdatePostDto extends PartialType(CreatePostDto) {}

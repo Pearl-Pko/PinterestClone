@@ -7,8 +7,11 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import api from "@web/src/utils/api";
 import ErrorIcon from "@web/public/error.svg";
+import { CreatePostDto } from "@schema/post";
 import PrimaryButton from "@web/src/components/common/PrimaryButton";
-import { PostsSchema } from "@web/src/schema/user";
+import { classValidatorResolver } from "@hookform/resolvers/class-validator";
+import { useCreatePost } from "@web/src/service/usePosts";
+import { AxiosError } from "axios";
 
 export default function page() {
   const {
@@ -17,16 +20,22 @@ export default function page() {
     setError,
     watch,
     formState: { errors, isSubmitting },
-  } = useForm<PostsSchema>({ resolver: zodResolver(PostsSchema) });
+  } = useForm<CreatePostDto>({
+    resolver: classValidatorResolver(CreatePostDto),
+  });
   useEffect(() => {
     // setError("external_link", {type: "dew", message: "Invalid url"})
   }, []);
-  const onSubmit = async (data: PostsSchema) => {
-    await new Promise((resolve) => setTimeout(resolve, 3000));
-    await api.post("/posts", {
-      ...data,
-      image_url: "same here",
-    });
+  const onSubmit = async (data: CreatePostDto) => {
+    try {
+      useCreatePost(data);
+    } catch (error) {
+      if (error instanceof AxiosError) {
+        setError("root", { message: error.response?.data?.message });
+      }
+
+      console.error(error);
+    }
   };
 
   console.log(errors);

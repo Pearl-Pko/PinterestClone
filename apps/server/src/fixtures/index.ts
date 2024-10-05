@@ -31,7 +31,6 @@ type NullToUndefined<T> = {
 
 export const MockPost: CreatePostDto = {
     title: "dsz",
-    image_url: "kelw e",
 
 }
 

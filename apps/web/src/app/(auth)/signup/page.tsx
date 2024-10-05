@@ -1,8 +1,9 @@
 "use client";
+import { classValidatorResolver } from "@hookform/resolvers/class-validator";
 import { zodResolver } from "@hookform/resolvers/zod";
 import ErrorInputField from "@web/src/components/common/ErrorInputField";
 import PrimaryButton from "@web/src/components/common/PrimaryButton";
-import { CreateUserSchema } from "@web/src/schema/user";
+import { CreateUserDtoWithConfirmation } from "@web/src/schema/user";
 import { useLogin, useSignUp } from "@web/src/service/useUser";
 import { AxiosError } from "axios";
 import Link from "next/link";
@@ -17,13 +18,13 @@ export default function page() {
     handleSubmit,
     setError,
     formState: { errors, isSubmitting, isValid, isDirty },
-  } = useForm<CreateUserSchema>({ resolver: zodResolver(CreateUserSchema) });
+  } = useForm<CreateUserDtoWithConfirmation>({ resolver: classValidatorResolver(CreateUserDtoWithConfirmation) });
 
   // useEffect(() => {
   //   setError("root", {message: "wrong"})
   //   // setError("external_link", {type: "dew", message: "Invalid url"})
   // }, []);
-  const mutate = async (data: CreateUserSchema) => {
+  const mutate = async (data: CreateUserDtoWithConfirmation) => {
     const { confirmPassword, ...rest } = data;
     try {
       const data = (await useSignUp(rest)).data;

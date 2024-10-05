@@ -1,22 +1,21 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { DatabaseService } from '@server/modules/database/database.service';
-import { Post as PostEntity, Prisma } from '@prisma/client';
 import { AuthorNotFoundException } from '@server/common/exceptions/exceptions';
-import { CreatePostDto, UpdatePostDto } from '@schema/post';
+import { CreatePostDto, PostEntity, UpdatePostDto } from '@schema/post';
+import { Prisma } from '@prisma/client';
 @Injectable()
 export class PostsService {
     constructor(private readonly database: DatabaseService) {}
 
-    async create(data: Prisma.PostUncheckedCreateInput): Promise<PostEntity> {
-        const {author_id, ...rest} = data;
-
+    async create(data: CreatePostDto, userId: string): Promise<PostEntity> {
         try {
             return await this.database.post.create({
-                "data": {
-                    ...rest,
+                data: {
+                    ...data,
+                    image_url: "ew",
                     author: {
                         connect: {
-                            id: data.author_id,
+                            id: userId,
                         },
                     },
                 },
@@ -25,7 +24,7 @@ export class PostsService {
             console.log(error.code);
             if (error instanceof Prisma.PrismaClientKnownRequestError) {
                 if (error.code === 'P2025') {
-                    throw new AuthorNotFoundException(data.author_id);
+                    throw new AuthorNotFoundException(userId);
                 }
             }
             throw error;

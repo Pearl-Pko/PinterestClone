@@ -9,17 +9,16 @@ import {
     NotFoundException,
 } from '@nestjs/common';
 import { PostsService } from './posts.service';
-import { Post as PostEntity, Prisma } from '@prisma/client';
 import { User } from '@server/decorators/user';
 import { AccessToken } from '@server/types/auth';
-import {CreatePostDto, UpdatePostDto} from "@schema/post"
+import {CreatePostDto, PostEntity, UpdatePostDto} from "@schema/post"
 @Controller('posts')
 export class PostsController {
     constructor(private readonly postsService: PostsService) {}
 
     @Post()
     async create(@User<AccessToken>() token: AccessToken,  @Body() createPostDto: CreatePostDto): Promise<PostEntity> {
-        return await this.postsService.create({...createPostDto, author_id: token.id});
+        return await this.postsService.create(createPostDto, token.id);
     }
 
     @Patch(':id')
