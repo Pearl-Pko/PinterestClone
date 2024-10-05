@@ -5,6 +5,7 @@ import MessagingIcon from "@web/public/messaging.svg";
 import PinterestIcon from "@web/public/pinterest-logo.svg";
 import { SessionProvider } from "../context/SessionContext";
 import AppProvider from "./AppProvider";
+import 'reflect-metadata';
 
 export default function RootLayout({
   children,

@@ -1,7 +1,7 @@
 import { User, Post, Prisma, $Enums } from "@prisma/client";
 import {z} from "zod"
-import { IntersectionType, PickType } from '@nestjs/mapped-types';
 import { IsEmail, IsEnum, IsNotEmpty, IsOptional, IsUUID,  } from 'class-validator';
+import { PickType } from "nestjs-mapped-types";
 
 // z.object({
 //     id: z.string(),
@@ -94,6 +94,9 @@ export class UserEntity implements User {
 
 export class CreateUserDto extends PickType(UserEntity, ["email", "password"] as const) implements Omit<Prisma.UserCreateInput, 'username'> {}
 
+export class LoginUserDto extends PickType(UserEntity, ["email", "password"] as const) implements Omit<Prisma.UserCreateInput, 'username'> {}
+
+
 export class ChangePassword {
     @IsNotEmpty()
     oldPassword: string;
@@ -116,3 +119,4 @@ export class ResetPasswordDto {
     @IsNotEmpty()
     newPassword: string;
 }
+

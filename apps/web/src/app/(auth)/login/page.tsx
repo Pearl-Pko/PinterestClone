@@ -3,13 +3,16 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { login } from "@web/src/actions/auth";
 import ErrorInputField from "@web/src/components/common/ErrorInputField";
 import PrimaryButton from "@web/src/components/common/PrimaryButton";
-import { CreateUserSchema, LoginUserSchema } from "@web/src/schema/user";
 import { useLogin, useSignUp } from "@web/src/service/useUser";
 import { AxiosError } from "axios";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import React, { useEffect } from "react";
 import { useForm } from "react-hook-form";
+import { classValidatorResolver } from '@hookform/resolvers/class-validator';
+import { LoginUserSchema } from "@web/src/schema/user";
+import { ChangePassword, CreateUserDto, LoginUserDto, ResetPasswordDto } from '@schema/user';
+
 
 export default function page() {
   const router = useRouter();
@@ -18,10 +21,11 @@ export default function page() {
     handleSubmit,
     setError,
     formState: { errors, isSubmitting, isValid, isDirty },
-  } = useForm<CreateUserSchema>({ resolver: zodResolver(LoginUserSchema) });
+  } = useForm<CreateUserDto>({ resolver: classValidatorResolver(CreateUserDto) });
 
-  const mutate = async (user: LoginUserSchema) => {
+  const mutate = async (user: CreateUserDto) => {
     try {
+    
       await useLogin(user);
       router.push("/");
     } catch (error) {

@@ -188,6 +188,15 @@ importers:
       axios:
         specifier: ^1.7.2
         version: 1.7.7
+      class-transformer:
+        specifier: ^0.5.1
+        version: 0.5.1
+      class-transformer-storage:
+        specifier: ^2.0.6
+        version: 2.0.6
+      class-validator:
+        specifier: ^0.14.1
+        version: 0.14.1
       client-only:
         specifier: ^0.0.1
         version: 0.0.1
@@ -206,6 +215,9 @@ importers:
       react-hook-form:
         specifier: ^7.52.2
         version: 7.53.0(react@18.3.1)
+      reflect-metadata:
+        specifier: ^0.2.0
+        version: 0.2.2
       schema:
         specifier: workspace:*
         version: link:../../packages/schema
@@ -246,15 +258,18 @@ importers:
 
   packages/schema:
     dependencies:
-      '@nestjs/mapped-types':
-        specifier: '*'
-        version: 2.0.5(@nestjs/common@10.4.4(class-transformer@0.5.1)(class-validator@0.14.1)(reflect-metadata@0.2.2)(rxjs@7.8.1))(class-transformer@0.5.1)(class-validator@0.14.1)(reflect-metadata@0.2.2)
       '@prisma/client':
         specifier: 5.17.0
         version: 5.17.0(prisma@5.20.0)
+      class-transformer:
+        specifier: ^0.5.1
+        version: 0.5.1
       class-validator:
         specifier: ^0.14.1
         version: 0.14.1
+      nestjs-mapped-types:
+        specifier: ^3.0.5
+        version: 3.0.5(class-transformer@0.5.1)(class-validator@0.14.1)(reflect-metadata@0.2.2)
       zod:
         specifier: ^3.23.8
         version: 3.23.8
@@ -2316,6 +2331,9 @@ packages:
   cjs-module-lexer@1.4.1:
     resolution: {integrity: sha512-cuSVIHi9/9E/+821Qjdvngor+xpnlwnuwIyZOaLmHBVdXL+gP+I6QQB9VkO7RI77YIcTV+S1W9AreJ5eN63JBA==}
 
+  class-transformer-storage@2.0.6:
+    resolution: {integrity: sha512-lI/59O4WXdpk3DmHa2AB7rE+zXZI0W1naqTAmEAsH/4yam+w5aRipngsolWVyBTXiknoQzkVS2qg7EojI+0RdQ==}
+
   class-transformer@0.5.1:
     resolution: {integrity: sha512-SQa1Ws6hUbfC98vKGxZH3KFY0Y1lm5Zm0SY8XX9zbK7FJCyVEac3ATW0RIpwzW+oOfmHE5PMPufDG9hCfoEOMw==}
 
@@ -4286,6 +4304,18 @@ packages:
   neo-async@2.6.2:
     resolution: {integrity: sha512-Yd3UES5mWCSqR+qNT93S3UoYUkqAZ9lLg8a7g9rimsWmYGK8cVToA4/sF3RrshdyV3sAGMXVUmpMYOw+dLpOuw==}
 
+  nestjs-mapped-types@3.0.5:
+    resolution: {integrity: sha512-6qMxpWvz1+Q+QXYbdxVlgb1aq5Z16QLHCgWaM3cbQU3aU0A4qvsKHVsCMzkSCAdaq6MmhKXn9so4iNdnqNTJYw==}
+    peerDependencies:
+      class-transformer: ^0.4.0 || ^0.5.0
+      class-validator: ^0.13.0 || ^0.14.0
+      reflect-metadata: ^0.1.12
+    peerDependenciesMeta:
+      class-transformer:
+        optional: true
+      class-validator:
+        optional: true
+
   next@14.2.5:
     resolution: {integrity: sha512-0f8aRfBVL+mpzfBjYfQuLWh2WyAwtJXCRfkPF4UJ5qd2YwrHczsrSzXU4tRMV0OAxR8ZJZWPFn6uhSC56UTsLA==}
     engines: {node: '>=18.17.0'}
@@ -4822,6 +4852,9 @@ packages:
   redis-parser@3.0.0:
     resolution: {integrity: sha512-DJnGAeenTdpMEH6uAJRK/uiyEIH9WVsUmoLwzudwGJUwZPp80PDBWPHXSAGNPwNvIXAbe7MSUB1zQFugFml66A==}
     engines: {node: '>=4'}
+
+  reflect-metadata@0.1.14:
+    resolution: {integrity: sha512-ZhYeb6nRaXCfhnndflDK8qI6ZQ/YcWZCISRAWICW9XYqMUwjZM9Z0DveWX/ABN01oxSHwVxKQmxeYZSsm0jh5A==}
 
   reflect-metadata@0.2.2:
     resolution: {integrity: sha512-urBwgfrvVP/eAyXx4hluJivBKzuEbSQs9rKWCrCkbSxNv8mxPcUZKeuoF3Uy4mJl3Lwprp6yy5/39VWigZ4K6Q==}
@@ -8285,6 +8318,11 @@ snapshots:
 
   cjs-module-lexer@1.4.1: {}
 
+  class-transformer-storage@2.0.6:
+    dependencies:
+      class-transformer: 0.5.1
+      reflect-metadata: 0.1.14
+
   class-transformer@0.5.1: {}
 
   class-validator@0.14.1:
@@ -10973,6 +11011,13 @@ snapshots:
 
   neo-async@2.6.2: {}
 
+  nestjs-mapped-types@3.0.5(class-transformer@0.5.1)(class-validator@0.14.1)(reflect-metadata@0.2.2):
+    dependencies:
+      reflect-metadata: 0.2.2
+    optionalDependencies:
+      class-transformer: 0.5.1
+      class-validator: 0.14.1
+
   next@14.2.5(@babel/core@7.25.7)(react-dom@18.3.1(react@18.3.1))(react@18.3.1):
     dependencies:
       '@next/env': 14.2.5
@@ -11587,6 +11632,8 @@ snapshots:
   redis-parser@3.0.0:
     dependencies:
       redis-errors: 1.2.0
+
+  reflect-metadata@0.1.14: {}
 
   reflect-metadata@0.2.2: {}
 
