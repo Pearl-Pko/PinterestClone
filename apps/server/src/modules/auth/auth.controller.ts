@@ -20,12 +20,13 @@ import { AccessTokenGuard } from './guards/access-auth.guard';
 import { Public } from '@server/constants/constants';
 import { RefreshTokenGuard } from './guards/refresh-auth.guard';
 import { User } from '@server/decorators/user';
-import { AccessToken, RefreshToken } from '@server/types/auth';
+import { RefreshToken } from '@server/types/auth';
 // import { ChangePassword, ForgotPasswordDto, ResetPasswordDto } from './dto/dto';
 import { MailService } from '../mail/mail.service';
 import { AddSessionInterceptor } from '@server/interceptors/add-session-interceptor';
 import { RemoveSessionInterceptor } from '@server/interceptors/delete-session-interceptor';
 import {ChangePassword, CreateUserDto, ForgotPasswordDto, ResetPasswordDto} from "@schema/user"
+import { AccessTokenDTO } from '@schema/auth';
 @Controller('user')
 export class AuthController {
     constructor(
@@ -74,7 +75,7 @@ export class AuthController {
     @Post('change-password')
     @HttpCode(HttpStatus.OK)
     async changePassword(
-        @User<AccessToken>() token: AccessToken,
+        @User<AccessTokenDTO>() token: AccessTokenDTO,
         @Body() password: ChangePassword,
     ) {
         // this.authService.

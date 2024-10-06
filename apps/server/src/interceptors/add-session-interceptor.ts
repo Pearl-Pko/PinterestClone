@@ -8,8 +8,9 @@ import {
 import { Observable } from 'rxjs';
 import { finalize, tap } from 'rxjs/operators';
 import { Request, Response as ExpressResponse } from 'express';
-import { AccessTokenDTO, RefreshTokenDto, Tokens } from '@server/types/auth';
+import { Tokens } from '@server/types/auth';
 import { JwtService } from '@nestjs/jwt';
+import { AccessTokenDTO, RefreshTokenDto } from '@schema/auth';
 
 @Injectable()
 export class AddSessionInterceptor implements NestInterceptor {

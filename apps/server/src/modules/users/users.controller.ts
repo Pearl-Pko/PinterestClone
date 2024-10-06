@@ -14,12 +14,12 @@ import {
 import { UsersService } from './users.service';
 import { Prisma } from '@prisma/client';
 import { User } from '@server/decorators/user';
-import { AccessToken } from '@server/types/auth';
 import { CreateUserDto, UserEntity, UserEntityDto } from '@schema/user';
 import {
     UserWithEmailNotFoundException,
     UserWithIdNotFoundException,
 } from '@server/common/exceptions/exceptions';
+import { AccessTokenDTO } from '@schema/auth';
 
 @Controller('user')
 export class UsersController {
@@ -28,12 +28,12 @@ export class UsersController {
     @Get('profile')
     @HttpCode(HttpStatus.OK)
     @UseInterceptors(ClassSerializerInterceptor)
-    async getProfile(@User<AccessToken>() token: AccessToken) {
-        console.log('token', token.id);
-        const user = await this.usersService.findUser({ id: token.id });
+    async getProfile(@User<AccessTokenDTO>() token: AccessTokenDTO) {
+        console.log('token', token.sub);
+        const user = await this.usersService.findUser({ id: token.sub });
 
         if (!user) {
-            throw new UserWithIdNotFoundException(token.id);
+            throw new UserWithIdNotFoundException(token.sub);
         }
 
         return new UserEntityDto(user);

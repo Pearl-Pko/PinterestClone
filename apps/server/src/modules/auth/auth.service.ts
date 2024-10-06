@@ -19,16 +19,16 @@ import {
 import * as bcrypt from 'bcrypt';
 import { SessionService } from '../session/session.service';
 import {
-    AccessToken,
-    AccessTokenPayload,
+    // AccessTokenPayload,
     RefreshToken,
-    RefreshTokenDto,
     Tokens,
 } from '@server/types/auth';
 // import { ChangePassword, ResetPasswordDto } from './dto/dto';
 import { DatabaseService } from '../database/database.service';
 import { createHmac, randomBytes } from 'crypto';
-import { ChangePassword, CreateUserDto, ResetPasswordDto } from '@schema/user';
+import { ChangePassword, CreateUserDto, ResetPasswordDto, UserEntity } from '@schema/user';
+import { AccessTokenDTO , AccessTokenClaims, RefreshTokenDto} from '@schema/auth';
+import { plainToInstance } from 'class-transformer';
 
 @Injectable()
 export class AuthService {
@@ -104,18 +104,13 @@ export class AuthService {
     async validateUser(
         email: string,
         password: string,
-    ): Promise<AccessTokenPayload | null> {
+    ): Promise<AccessTokenClaims | null> {
         const user = await this.usersService.findUser({ email });
 
         const hashPassword = await this.hashData(password);
 
         if (user && user.password === hashPassword) {
-            return {
-                email: user.email,
-                first_name: user.first_name,
-                last_name: user.last_name,
-                username: user.username,
-            };
+            return plainToInstance(AccessTokenClaims, user, {strategy: 'excludeAll'});
         }
         return null;
     }
@@ -129,7 +124,7 @@ export class AuthService {
         return bcrypt.compare(plainText, hash);
     }
 
-    async getTokens(userId: string, user: AccessToken, token_id: string) {
+    async getTokens(userId: string, user: UserEntity, token_id: string) {
         const [accessToken, refreshToken] = await Promise.all([
             this.generateAccessToken(user),
             this.generateRefreshToken(user, token_id),
@@ -137,17 +132,12 @@ export class AuthService {
         return { accessToken, refreshToken };
     }
 
-    async generateAccessToken(user: AccessToken) {
+    async generateAccessToken(user: UserEntity) {
         return this.jwtService.signAsync(
             {
                 sub: user.id,
-                data: {
-                    email: user.email,
-                    first_name: user.first_name,
-                    last_name: user.first_name,
-                    username: user.username,
-                },
-            },
+                ...plainToInstance(AccessTokenClaims, user, {strategy: 'excludeAll'}),
+            } as AccessTokenDTO,
             {
                 secret: this.configService.get<string>('JWT_ACCESS_SECRET'),
                 expiresIn: this.configService.get<string>(
@@ -157,7 +147,7 @@ export class AuthService {
         );
     }
 
-    async generateRefreshToken(user: AccessToken, token_id: string) {
+    async generateRefreshToken(user: UserEntity, token_id: string) {
         return this.jwtService.signAsync(
             {
                 sub: user.id,
@@ -174,19 +164,19 @@ export class AuthService {
 
     async refreshToken(refreshToken: RefreshToken): Promise<Tokens> {
         const user = await this.sessionService.verifySession(
-            refreshToken.id,
-            refreshToken.token_id,
-            refreshToken.refresh_token,
+            refreshToken.sub,
+            refreshToken.jti,
+            refreshToken.token,
         );
 
         return { access_token: await this.generateAccessToken(user) };
     }
 
     async logout(refreshToken: RefreshToken) {
-        return await this.sessionService.deleteSession(refreshToken.token_id);
+        return await this.sessionService.deleteSession(refreshToken.jti);
     }
 
-    async changePassword(userToken: AccessToken, password: ChangePassword) {
+    async changePassword(userToken: AccessTokenDTO, password: ChangePassword) {
         const user = await this.usersService.findUser({
             email: userToken.email,
         });
@@ -200,6 +190,7 @@ export class AuthService {
             user.password,
         );
 
+    
         if (!passwordMatch) {
             console.log('not match');
             throw new HttpException('Incorrect password', HttpStatus.FORBIDDEN);
@@ -207,11 +198,11 @@ export class AuthService {
 
         const hashNewPassword = await this.hashData(password.newPassword);
 
-        await this.usersService.updateUser(userToken.id, {
+        await this.usersService.updateUser(userToken.sub, {
             password: hashNewPassword,
         });
 
-        await this.sessionService.invalidateUserSessions(userToken.id);
+        await this.sessionService.invalidateUserSessions(userToken.sub);
 
         return true;
     }

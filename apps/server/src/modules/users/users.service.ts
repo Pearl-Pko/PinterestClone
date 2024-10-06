@@ -2,6 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { DatabaseService } from '@server/modules/database/database.service';
 import { Prisma, User } from '@prisma/client';
 import { CreateUserDto } from '@schema/user';
+import { convertTextToSlug } from '@server/utils/format';
 
 @Injectable()
 export class UsersService {
@@ -39,12 +40,12 @@ export class UsersService {
     }
 
     async create(user: CreateUserDto) {
-        const randomUserName = user.email;
+        const defaultUserName = convertTextToSlug(user.email.split("@")[0]);
 
         return await this.database.user.create({
             data: {
                 ...user,
-                username: randomUserName,
+                username: defaultUserName,
             },
         });
     }

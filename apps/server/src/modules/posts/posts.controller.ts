@@ -10,15 +10,15 @@ import {
 } from '@nestjs/common';
 import { PostsService } from './posts.service';
 import { User } from '@server/decorators/user';
-import { AccessToken } from '@server/types/auth';
 import {CreatePostDto, PostEntity, UpdatePostDto} from "@schema/post"
+import { AccessTokenDTO } from '@schema/auth';
 @Controller('posts')
 export class PostsController {
     constructor(private readonly postsService: PostsService) {}
 
     @Post()
-    async create(@User<AccessToken>() token: AccessToken,  @Body() createPostDto: CreatePostDto): Promise<PostEntity> {
-        return await this.postsService.create(createPostDto, token.id);
+    async create(@User<AccessTokenDTO>() token: AccessTokenDTO,  @Body() createPostDto: CreatePostDto): Promise<PostEntity> {
+        return await this.postsService.create(createPostDto, token.sub);
     }
 
     @Patch(':id')

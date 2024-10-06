@@ -1,7 +1,8 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PassportStrategy } from '@nestjs/passport';
-import { JwtToken, RefreshToken, RefreshTokenDto } from '@server/types/auth';
+import { RefreshTokenDto } from '@schema/auth';
+import { RefreshToken } from '@server/types/auth';
 import { Request } from 'express';
 import { ExtractJwt, Strategy as JwtStrategy } from 'passport-jwt';
 
@@ -30,9 +31,8 @@ export class RefreshTokenStrategy extends PassportStrategy(
             req.get('Authorization')?.replace('Bearer', '').trim()! ||
             req.cookies['refresh_token'];
         return {
-            id: payload.sub,
-            token_id: payload.jti,
-            refresh_token: refreshToken,
+            ...payload,
+            token: refreshToken,
         };
     }
 }

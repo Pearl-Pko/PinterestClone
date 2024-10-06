@@ -2,7 +2,7 @@ import { User, Post, Prisma, $Enums } from "@prisma/client";
 import {z} from "zod"
 import { IsDate, IsEmail, IsEnum, IsNotEmpty, IsOptional, IsUUID,  } from 'class-validator';
 import { PickType } from "nestjs-mapped-types";
-import { Exclude } from "class-transformer";
+import { Exclude, Expose } from "class-transformer";
 
 export class UserEntity implements User {
     @IsUUID()
@@ -57,6 +57,8 @@ export class UserEntity implements User {
       }
 } 
 
+
+
 export class UserEntityDto extends UserEntity {
     @Exclude()
     password: string;
@@ -66,9 +68,15 @@ export class UserEntityDto extends UserEntity {
 
     @Exclude()
     reset_token_expires_at: Date | null;
+
+    @Expose({name: "full_name"})
+    getFullName() {
+        return this.first_name + " " + this.last_name
+    }
 }
 
 type a = Partial<UserEntity>
+
 
 
 export class CreateUserDto extends PickType(UserEntity, ["email", "password"] as const) implements Omit<Prisma.UserCreateInput, 'username'> {}
