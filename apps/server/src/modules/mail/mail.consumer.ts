@@ -34,6 +34,7 @@ export class MailConsumer extends WorkerHost {
             })
         }
         catch (error) {
+            console.log("result", error);
             throw error;
         }
     }

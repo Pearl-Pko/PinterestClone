@@ -5,6 +5,6 @@
   "entryFile": "apps/server/src/main",
   "compilerOptions": {
     "deleteOutDir": true, 
-    "assets": [{"include": "**/*.ejs", "watchAssets": true}]
+    "assets": [{"include": "**/*.ejs", "watchAssets": true, "outDir": "dist/apps/server/src"}]
   }
 }
