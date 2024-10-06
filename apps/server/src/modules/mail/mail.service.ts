@@ -9,7 +9,7 @@ export class MailService {
     constructor(@InjectQueue('email') private emailQueue: Queue) {}
 
     async sendPasswordResetMail(email: string, token: string) {
-        await this.emailQueue.add(
+        console.log(await this.emailQueue.add(
             'password-reset',
             {
                 email,
@@ -18,6 +18,6 @@ export class MailService {
             {
                 priority: 2,
             },
-        );
+        ));
     }
 }

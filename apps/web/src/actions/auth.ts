@@ -1,11 +1,13 @@
 "use server";
 import { redirect } from "next/navigation";
-import { LoginUserSchema } from "../schema/user";
 import { useLogin } from "../service/useUser";
 import axios from "axios";
 import { cookies } from "next/headers";
+import { LoginUserDto, } from "@schema/user";
+import { AccessTokenDTO, } from "@schema/auth";
+import { jwtDecode } from "jwt-decode";
 
-export async function login(user: LoginUserSchema) {
+export async function login(user: LoginUserDto) {
   // const email = form.get("email");
   // const password = form.get("password");
   // console.log("email", "password");
@@ -27,6 +29,15 @@ export async function clearSession() {
     cookie.delete("refresh_token")
 }
 
+export async function getServerSession() {
+  const session = cookies();
+
+  const accessToken = session.get("access_token");
+  if (!accessToken) return null;
+
+  return jwtDecode<AccessTokenDTO>(accessToken?.value);
+}
+
 export async function refreshToken() {
     const session = cookies();
     const refreshToken = session.get("refresh_token")
@@ -34,7 +45,7 @@ export async function refreshToken() {
 
     await axios.post(`${process.env.API_URL}/auth/refresh`, {
         headers: {
-            Authorization: `Bearer ${refreshToken}`
+            Authorization: `Bearer ${refreshToken?.value}`
         }
     })
 }
@@ -42,5 +53,4 @@ export async function refreshToken() {
 export async function getSession() {
 
 }
-
 

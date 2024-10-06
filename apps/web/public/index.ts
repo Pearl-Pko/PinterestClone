@@ -1,0 +1,5 @@
+export {default as PasswordEyeIcon} from "./password-eye.svg"
+export {default as Logo} from "./pinterest-logo.svg"
+export {default as PasswordHiddenEyeIcon} from "./password-hidden-eye.svg"
+export {default as NotificationIcon} from "./notifications.svg"
+export {default as MessagingIcon} from "./messaging.svg"

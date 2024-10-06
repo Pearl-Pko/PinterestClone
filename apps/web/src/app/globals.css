@@ -3,13 +3,13 @@
 @tailwind utilities;
 
 body {
-    line-height: 1.5;
+  line-height: 1.5;
 }
 
 .btn-primary {
-    @apply font-semibold text-white bg-[#E60023] px-4 py-2 rounded-full
+  @apply font-semibold text-white bg-[#E60023] px-4 py-2 rounded-full;
 }
 
 .input {
-    @apply mt-1 focus:outline-none border-2 rounded-2xl px-3 py-2 w-full
+  @apply focus:outline-none focus-within:outline-none border-2 rounded-2xl px-3 py-2 w-full focus:outline-[#75bfff] focus-within:outline-[#75bfff] focus:outline-4 [&:focus-within]:outline-4;
 }

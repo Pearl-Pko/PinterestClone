@@ -58,8 +58,13 @@ export class UserEntity implements User {
 } 
 
 
+// export type UserEntityDto = {
 
-export class UserEntityDto extends UserEntity {
+// }
+
+export type UserEntityDto = Omit<UserEntity, "password" | "reset_token" | "reset_token_expires_at"> & {full_name: string}
+
+export class UserEntitySerializer extends UserEntity  {
     @Exclude()
     password: string;
 

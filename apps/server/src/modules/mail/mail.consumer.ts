@@ -32,9 +32,10 @@ export class MailConsumer extends WorkerHost {
                     resetUrl: resetUrl
                 }
             })
+            console.log("result", result)
         }
         catch (error) {
-            console.log("result", error);
+            console.log(error);
             throw error;
         }
     }
