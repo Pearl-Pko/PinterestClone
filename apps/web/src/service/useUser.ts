@@ -1,4 +1,4 @@
-import { ForgotPasswordDto, UserEntityDto, UserEntitySerializer } from "@schema/user";
+import { ForgotPasswordDto, ResetPasswordDto, UserEntityDto, UserEntitySerializer } from "@schema/user";
 import api from "../utils/api";
 import { classToPlain, instanceToPlain } from "class-transformer";
 
@@ -24,4 +24,8 @@ export const useGetProfile = async () => {
 
 export const useForgotPassword = async (data: ForgotPasswordDto) => {
     return (await api.post("user/forgot-password", data)).data
+}
+
+export const useResetPassword = async (data: ResetPasswordDto) => {
+  return (await api.post("user/reset-password", data)).data;
 }

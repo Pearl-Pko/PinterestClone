@@ -208,7 +208,7 @@ export class AuthService {
     }
 
     async generateResetToken() {
-        const resetToken = randomBytes(64).toString('base64');
+        const resetToken = randomBytes(64).toString('base64url');
         const resetTokenExpiry = new Date(Date.now() + 3600 * 1000);
         return { resetToken, resetTokenExpiry };
     }
@@ -246,8 +246,8 @@ export class AuthService {
     async resetPassword(resetPasswordDto: ResetPasswordDto) {
         const hashedResetToken = this.generateHMac(resetPasswordDto.token);
         const user =
-            await this.usersService.findUserByResetToken(hashedResetToken);
-
+        await this.usersService.findUserByResetToken(hashedResetToken);
+        
         if (!user) {
             throw new UnauthorizedException('Invalid or expired token');
         }

@@ -3,7 +3,7 @@ import { classValidatorResolver } from "@hookform/resolvers/class-validator";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { PasswordEyeIcon, PasswordHiddenEyeIcon } from "@web/public";
 import ErrorInputField from "@web/src/components/common/ErrorInputField";
-import PrimaryButton from "@web/src/components/common/PrimaryButton";
+import Button from "@web/src/components/common/Button";
 import { CreateUserDtoWithConfirmation } from "@web/src/schema/user";
 import { useLogin, useSignUp } from "@web/src/service/useUser";
 import { AxiosError } from "axios";
@@ -118,7 +118,7 @@ export default function page() {
               {errors.root.message}
             </div>
           )}
-          <PrimaryButton
+          <Button
             type="submit"
             text="Continue"
             className="w-full"

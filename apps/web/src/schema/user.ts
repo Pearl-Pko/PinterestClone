@@ -1,4 +1,4 @@
-import { CreateUserDto } from "@schema/user";
+import { CreateUserDto, ResetPasswordDto } from "@schema/user";
 import {
   IsNotEmpty,
   Validate,
@@ -26,4 +26,9 @@ export class MatchConstraint implements ValidatorConstraintInterface {
 export class CreateUserDtoWithConfirmation extends CreateUserDto {
   @Validate(MatchConstraint, ["password"])
   confirmPassword: string;
+}
+
+export class ResetPasswordDtoWithConfirmation extends ResetPasswordDto {
+  @Validate(MatchConstraint, ["newPassword"])
+  confirmNewPassword: string;
 }

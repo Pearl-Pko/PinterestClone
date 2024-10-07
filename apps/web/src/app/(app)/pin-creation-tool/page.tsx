@@ -8,7 +8,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import api from "@web/src/utils/api";
 import ErrorIcon from "@web/public/error.svg";
 import { CreatePostDto } from "@schema/post";
-import PrimaryButton from "@web/src/components/common/PrimaryButton";
+import Button from "@web/src/components/common/Button";
 import { classValidatorResolver } from "@hookform/resolvers/class-validator";
 import { useCreatePost } from "@web/src/service/usePosts";
 import { AxiosError } from "axios";
@@ -52,7 +52,7 @@ export default function page() {
       >
         <div className="p-4 border-2 border-l-0 flex justify-between items-center">
           <p className="font-semibold text-lg">Create Pin</p>
-          <PrimaryButton type="submit" text="Publish" />
+          <Button type="submit" text="Publish" />
         </div>
         <div className="grid my-10 mx-auto place-content-center grid-cols-5 max-w-[1000px] gap-10">
           <div className="col-span-2 flex gap-5 flex-col">

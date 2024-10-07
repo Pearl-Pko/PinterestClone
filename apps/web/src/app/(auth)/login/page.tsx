@@ -2,7 +2,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { login } from "@web/src/actions/auth";
 import ErrorInputField from "@web/src/components/common/ErrorInputField";
-import PrimaryButton from "@web/src/components/common/PrimaryButton";
+import Button from "@web/src/components/common/Button";
 import { useLogin, useSignUp } from "@web/src/service/useUser";
 import { AxiosError } from "axios";
 import Link from "next/link";
@@ -94,7 +94,7 @@ export default function page() {
           <Link className="self-start mb-2 text-sm font-medium" href="/password/reset">
             Forgotton your Password?
           </Link>
-          <PrimaryButton
+          <Button
             type="submit"
             text="Continue"
             className="w-full"

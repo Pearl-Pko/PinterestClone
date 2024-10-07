@@ -37,7 +37,7 @@ export const SessionProvider = ({ children }: Props) => {
         };
         if (
           error.response?.status === 401 &&
-          error?.config?.url !== "auth/refresh"
+          error?.config?.url !== "user/refresh"
         ) {
           try {
             if (!originalRequest._retry) {
