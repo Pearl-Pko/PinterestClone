@@ -58,6 +58,9 @@ importers:
       ejs:
         specifier: ^3.1.10
         version: 3.1.10
+      nestjs-mapped-types:
+        specifier: ^3.0.5
+        version: 3.0.5(class-transformer@0.5.1)(class-validator@0.14.1)(reflect-metadata@0.2.2)
       nodemailer:
         specifier: ^6.9.15
         version: 6.9.15
