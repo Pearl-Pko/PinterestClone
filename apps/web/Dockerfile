@@ -19,7 +19,7 @@ RUN mkdir -p packages/schema
 COPY ./apps/web/package*.json ./apps/web
 COPY ./packages/schema/package*json ./packages/schema
 
-RUN pnpm --filter web... install --frozen-lockfile 
+RUN pnpm --filter web... install --frozen-lockfile  --shamefully-hoist
 COPY . .
 RUN npx prisma generate --schema ./packages/schema/prisma/schema.prisma
 
@@ -29,15 +29,15 @@ RUN pnpm --filter web build
 RUN pnpm --filter web deploy --prod /prod
 
 FROM base AS prod 
-COPY --from=build /prod/node_modules ./node_modules
-COPY --from=build /prod/.next ./.next
+
+RUN mkdir .next 
+COPY --from=build /prod/.next/standalone ./
+COPY --from=build /prod/.next/static ./.next/static
 COPY --from=build /prod/public ./public
-COPY --from=build /prod/package.json .
 
 
 EXPOSE 3000
 
-CMD ["pnpm", "start"]
-# CMD ["node", "dist/apps/web/src/main"]
+CMD ["node", "server.js"]
 
 
