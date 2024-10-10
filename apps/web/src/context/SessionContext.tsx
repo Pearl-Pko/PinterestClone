@@ -2,11 +2,12 @@
 
 import { createContext, useEffect } from "react";
 import { useLogin, useRefreshToken } from "../service/useUser";
-import { CreateUserSchema } from "../schema/user";
 import api from "../utils/api";
 import { AxiosError, AxiosRequestConfig } from "axios";
 import { useRouter } from "next/navigation";
 import { clearSession } from "../actions/auth";
+import { LoginUserDto } from "@schema/user";
+import { SessionContextType } from "../types/session";
 
 interface Props {
   children: React.ReactNode;
@@ -16,7 +17,7 @@ export const SessionContext = createContext<SessionContextType | null>(null);
 
 export const SessionProvider = ({ children }: Props) => {
   const router = useRouter();
-  const login = async (user: CreateUserSchema) => {};
+  const login = async (user: LoginUserDto) => {};
 
   const signup = async () => {};
 

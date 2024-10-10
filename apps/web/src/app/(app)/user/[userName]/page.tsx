@@ -1,9 +1,9 @@
 "use client"
 import React from "react";
 import api from "@web/src/utils/api";
-import PinterestIcon from "@web/public/pinterest-logo.svg";
 import { useQuery } from "@tanstack/react-query";
 import { useGetProfile } from "@web/src/service/useUser";
+import { PinterestIcon } from "@web/public";
 
 export default function page({
   params,

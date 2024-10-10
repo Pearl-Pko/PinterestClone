@@ -1,17 +1,14 @@
 "use client";
 import React, { useEffect } from "react";
-import PinDraftIcon from "@web/public/pin-drafts.svg";
-import ResetPinIcon from "@web/public/reset-pin.svg";
-import UploadIcon from "@web/public/upload.svg";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import api from "@web/src/utils/api";
-import ErrorIcon from "@web/public/error.svg";
 import { CreatePostDto } from "@schema/post";
 import Button from "@web/src/components/common/Button";
 import { classValidatorResolver } from "@hookform/resolvers/class-validator";
 import { useCreatePost } from "@web/src/service/usePosts";
 import { AxiosError } from "axios";
+import { ErrorIcon, PinDraftIcon, ResetPinIcon, UploadIcon } from "@web/public";
 
 export default function page() {
   const {

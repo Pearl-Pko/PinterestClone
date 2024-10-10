@@ -1,5 +1,7 @@
+import type { LoginUserDto } from "@schema/user";
+
 type SessionContextType = {
-    login: () => void;
+    login: (user: LoginUserDto) => void;
     signup: () => void;
     refreshToken: () => void;
     logout: () => void;
