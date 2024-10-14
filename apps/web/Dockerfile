@@ -23,6 +23,9 @@ RUN pnpm --filter web... install --frozen-lockfile --shamefully-hoist
 COPY . .
 RUN npx prisma generate --schema ./packages/schema/prisma/schema.prisma
 
+ARG API_URL
+ENV API_URL=${API_URL}
+
 RUN pnpm --filter web build 
 
 FROM base AS prod 

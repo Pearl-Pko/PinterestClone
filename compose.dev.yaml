@@ -44,14 +44,20 @@ services:
     environment:
       - REDIS_URI=redis://redis:6379
       - DATABASE_URL=postgres://user:12345@postgres:5432/pinterest
-  
+      
   frontend: 
+    build: 
+      args:
+        - API_URL=http://backend:4000
     depends_on:
       - backend
     ports:
       - "3000:3000"    
     env_file:
       - ./apps/web/.env
+    environment:
+      - API_URL="http://backend:4000"
+    
 
 volumes:
   postgres_data:
