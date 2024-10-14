@@ -1,0 +1,18 @@
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: ./apps/server/DockerfileBuild
+    container_name: server
+    restart: always
+    
+  frontend:
+    build:
+      context: .
+      dockerfile: ./apps/web/Dockerfile
+    container_name: web
+    restart: always
+    depends_on:
+      - backend
+
+
