@@ -39,6 +39,11 @@ services:
         condition: service_healthy
     ports:
       - "4000:4000"
+    command: >
+      sh -c "
+      npm run migration -- --schema ./dist/packages/schema/prisma/schema.prisma  && 
+      npm run start:prod
+      "
     env_file:
       - ./apps/server/.env
     environment:
@@ -57,8 +62,7 @@ services:
       - ./apps/web/.env
     environment:
       - API_URL="http://backend:4000"
-    
-
+  
 volumes:
   postgres_data:
   redis_data:

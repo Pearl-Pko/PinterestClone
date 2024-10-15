@@ -8,8 +8,20 @@ RUN npm install -g pnpm@${PNPM_VERSION}
 WORKDIR /usr/src/app
 
 FROM base AS build 
-COPY . .
+
+# root deps
+COPY package*.json ./
+COPY pnpm*.yaml ./
+
+#server deps 
+RUN mkdir -p apps/server 
+RUN mkdir -p packages/schema 
+
+COPY ./apps/server/package*.json ./apps/server
+COPY ./packages/schema/package*json ./packages/schema
+
 RUN pnpm --filter server... install --frozen-lockfile 
+COPY . .
 RUN npx prisma generate --schema ./packages/schema/prisma/schema.prisma
 RUN pnpm --filter server build 
 RUN pnpm --filter server deploy --prod /prod
@@ -17,11 +29,12 @@ RUN pnpm --filter server deploy --prod /prod
 FROM base AS prod 
 COPY --from=build /prod/node_modules ./node_modules
 COPY --from=build /prod/dist ./dist
-COPY --from=build /usr/src/app/packages/schema/prisma/schema.prisma ./dist/packages
+COPY --from=build /usr/src/app/packages/schema/prisma ./dist/packages/schema/prisma
+COPY --from=build /usr/src/app/apps/server/package.json .
 
-RUN npx prisma generate --schema ./dist/packages/schema.prisma
+RUN npx prisma generate --schema ./dist/packages/schema/prisma/schema.prisma
 
 EXPOSE 4000
-CMD ["node", "dist/apps/server/src/main"]
+CMD ["npm", "run", "start:prod"]
 
 
