@@ -1,0 +1,73 @@
+name: "Docker Build"
+description: "re"
+inputs: 
+  docker_file_path:
+    required: true
+    type: string
+  image_name:
+    required: true
+    type: string
+  build_args:
+    required: false
+    type: string
+    default: ''
+  ACCESS_KEY:
+    description: 'AWS access key'
+    required: true
+  SECRET_KEY:
+    description: 'AWS secret key'
+    required: true
+  REGION:
+    description: 'AWS region'
+    required: true
+  ECR_REPOSITORY:
+    description: 'AWS region'
+    required: true
+
+runs: 
+  using: "composite"
+
+  steps:
+    - uses: actions/checkout@v3
+    
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v2
+    
+    - name: Cache Docker layers
+      uses: actions/cache@v3
+      with:
+        path: /tmp/.buildx-cache
+        key: ${{ runner.os }}-buildx-${{ inputs.image_name }}-${{ github.sha }}
+        restore-keys: |
+          ${{ runner.os }}-buildx-${{ inputs.image_name }}-
+
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v4 # More information on this action can be found below in the 'AWS Credentials' section
+      with:
+        # role-to-assume: ${{inputs.ROLE_TO_ASSUME}}
+        # aws-region: ${{inputs.REGION}}
+        aws-access-key-id: ${{ inputs.ACCESS_KEY }}
+        aws-secret-access-key: ${{ inputs.SECRET_KEY }}
+        aws-region: ${{ inputs.REGION }}
+
+    - name: Login to Amazon ECR Public
+      id: login-ecr
+      uses: aws-actions/amazon-ecr-login@v1
+      with:
+        registry-type: public
+    
+    - name: Set outputs
+      id: vars
+      shell: bash
+      run: echo "sha_short=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+
+    - name: Build and push
+      id: build-and-push
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        platforms: linux/amd64
+        build-args: ${{ inputs.build_args }}
+        file: ${{ inputs.docker_file_path }}
+        push: true
+        tags: ${{ steps.login-ecr.outputs.registry }}/${{ inputs.ECR_REPOSITORY }}:${{ steps.vars.outputs.sha_short }}

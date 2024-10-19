@@ -1,0 +1,64 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - workflow
+  pull_request:
+    branches:
+      - workflow
+
+permissions:
+  id-token: write   
+  contents: read  
+    
+
+jobs:
+  # build:
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - name: Checkout code
+  #       uses: actions/checkout@v2
+
+  #     - name: Set up Node.js
+  #       uses: actions/setup-node@v2
+  #       with:
+  #         node-version-file: '.nvmrc'
+
+  #     - name: Install dependencies
+  #       run: npm install
+
+  web:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v3
+        
+      - name: Build web 
+        uses: "./.github/actions/docker-build/"
+        with: 
+          docker_file_path: ./apps/web/Dockerfile
+          image_name: web 
+          ACCESS_KEY: ${{ secrets.ACCESS_KEY }}
+          SECRET_KEY: ${{ secrets.SECRET_KEY }}
+          REGION: ${{ secrets.REGION }}
+          ECR_REPOSITORY: ${{ secrets.ECR_WEB_REPOSITORY }}
+  
+  server:     
+    runs-on: ubuntu-latest
+      
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Build server 
+        uses: "./.github/actions/docker-build/"
+        with: 
+          docker_file_path: ./apps/server/DockerfileBuild
+          image_name: server 
+          ACCESS_KEY: ${{ secrets.ACCESS_KEY }}
+          SECRET_KEY: ${{ secrets.SECRET_KEY }}
+          REGION: ${{ secrets.REGION }}
+          ECR_REPOSITORY: ${{ secrets.ECR_SERVER_REPOSITORY }}
+
+
+
