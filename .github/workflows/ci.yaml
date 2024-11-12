@@ -8,10 +8,6 @@ on:
     branches:
       - workflow
 
-permissions:
-  id-token: write
-  contents: read
-  checks: write
 
 concurrency: deploy-${{ github.ref == 'refs/heads/main' && 'production' || 'development' }}
 
@@ -82,23 +78,6 @@ jobs:
             schema: 
               - 'packages/schema/prisma/**'
 
-  
-  tio: 
-    needs: [diff, migrate, test]
-    runs-on: ubuntu-latest
-    if: always()
-    steps:
-      - name: Test
-        shell: bash 
-        run: |  
-          echo ${{needs.diff.outputs.server}}
-          echo ${{needs.migrate.result}}
-          echo ${{needs.test.result}}
-          echo ${{needs.diff.outputs.server == 'true'}}
-          echo ${{needs.diff.outputs.web}}
-          echo ${{needs.diff.outputs.schema}}
-          echo ${{needs.diff.outputs.server == 'true' && needs.migrate.result != 'failed' && needs.test.result == 'success' }}
-
   migrate:
     needs: [test, diff]
     name: Apply migration
@@ -115,7 +94,7 @@ jobs:
 
       - name: Apply migration
         shell: bash
-        if: ${{needs.diff.outputs.schema == 'true' && needs.test.result == 'success'}}
+        if: ${{needs.diff.outputs.schema == 'true'}}
         env:
           DATABASE_URL: ${{secrets.DATABASE_URL}}
         run: npx prisma migrate deploy --schema  ./packages/schema/prisma/schema.prisma
@@ -123,7 +102,7 @@ jobs:
   web:
     needs: [migrate, diff, test]
     uses: "./.github/workflows/docker-build.yaml"
-    if: ${{needs.diff.outputs.web == 'true' && needs.migrate.result == 'success' && needs.test.result == 'success' }}
+    if: ${{needs.diff.outputs.web == 'true'}}
     with:
       docker_file_path: ./apps/web/Dockerfile
       container_name: web
@@ -135,11 +114,15 @@ jobs:
       REGION: ${{ secrets.REGION }}
       EC2_SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
       EC2_USERNAME: ${{ secrets.EC2_USERNAME}}
-      EC2_URL: ${{secrets.EC2_URL}}
+      EC2_IP: ${{secrets.EC2_IP}}
 
   server:
+    # permissions:
+    #   id-token: write
+    #   contents: read
+    #   checks: write
     needs: [migrate, diff, test]
-    if: ${{needs.diff.outputs.server == 'true' && needs.migrate.result == 'success' && needs.test.result == 'success' }}
+    if: ${{needs.diff.outputs.server == 'true'}}
     uses: "./.github/workflows/docker-build.yaml"
     with:
       docker_file_path: ./apps/server/DockerfileBuild
@@ -152,5 +135,5 @@ jobs:
       REGION: ${{ secrets.REGION }}
       EC2_SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
       EC2_USERNAME: ${{ secrets.EC2_USERNAME}}
-      EC2_URL: ${{secrets.EC2_URL}}
+      EC2_IP: ${{secrets.EC2_IP}}
       CONTAINER_ENV_VARIABLES: ${{secrets.BACKEND_ENV}}

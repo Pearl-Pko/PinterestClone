@@ -1,0 +1,61 @@
+name: Clean up ECR Images 
+
+on:
+  schedule:
+    - cron: '30 0 * * 0'  
+  workflow_dispatch:
+
+jobs:
+  cleanup-ecr:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      id-token: write   # Needed for OpenID Connect (OIDC) federation
+      actions: read
+    
+    steps:
+      - name: Install AWS CLI
+        run: |  
+          curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+          unzip awscliv2.zip
+          sudo ./aws/install
+      
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.ACCESS_KEY }}
+          aws-secret-access-key: ${{ secrets.SECRET_KEY }}
+          # role-to-assume: ${{secrets.ROLE_TO_ASSUME}}
+          aws-region: us-east-1
+
+      - name: Login to Amazon ECR Public
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+        with:
+          registry-type: public
+      
+      - name: Leave only the two most recent images 
+        shell: bash
+        run: |
+          export AWS_PAGER=""
+          repos=("${{secrets.ECR_WEB_REPOSITORY}}" "${{secrets.ECR_SERVER_REPOSITORY}}")
+          for repo in "${repos[@]}"; do
+            echo "$repo"
+            
+            TAGGED_IMAGES=$(aws ecr-public describe-images --repository-name $repo --query 'reverse(sort_by(imageDetails[?imageTags], &imagePushedAt))[].{imageDigest: imageDigest}' --output json --no-paginate)
+            TAGGED_IMAGES_SUBSET=$(echo $TAGGED_IMAGES | jq '.[2:]')
+
+            if [ $( echo $TAGGED_IMAGES_SUBSET | jq 'length') -ge 1 ]; then
+              aws ecr-public batch-delete-image --repository-name $repo --image-ids "$TAGGED_IMAGES_SUBSET"
+            fi
+
+            UNTAGGED_IMAGES=$(aws ecr-public describe-images --repository-name $repo --query 'reverse(sort_by(imageDetails[?imageTags==null], &imagePushedAt))[].{imageDigest: imageDigest}' --output json --no-paginate)
+            UNTAGGED_IMAGES_SUBSET=$(echo $UNTAGGED_IMAGES | jq '.[2:]')
+            if [  $( echo $UNTAGGED_IMAGES_SUBSET | jq 'length') -ge 1 ]; then
+              aws ecr-public batch-delete-image --repository-name $repo --image-ids "$UNTAGGED_IMAGES_SUBSET"
+            fi
+          done
+
+
+      
