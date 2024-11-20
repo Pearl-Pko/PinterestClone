@@ -3,16 +3,21 @@ import { DatabaseService } from '@server/modules/database/database.service';
 import { AuthorNotFoundException } from '@server/common/exceptions/exceptions';
 import { CreatePostDto, PostEntity, UpdatePostDto } from '@schema/post';
 import { Prisma } from '@prisma/client';
+import { S3Service } from '../s3/s3.service';
 @Injectable()
 export class PostsService {
-    constructor(private readonly database: DatabaseService) {}
+    constructor(private readonly database: DatabaseService, private readonly s3Service: S3Service) {}
 
     async create(data: CreatePostDto, userId: string): Promise<PostEntity> {
+        const {content, ...rest} = data;
+
+        const uri = await this.s3Service.uploadFile(content, `posts/${userId}/${Date.now()}`);
+
         try {
             return await this.database.post.create({
                 data: {
-                    ...data,
-                    image_url: "ew",
+                    ...rest,
+                    content_uri: uri,
                     author: {
                         connect: {
                             id: userId,

@@ -7,16 +7,21 @@ import {
     Param,
     Delete,
     NotFoundException,
+    UseInterceptors,
+    UploadedFile,
 } from '@nestjs/common';
 import { PostsService } from './posts.service';
 import { User } from '@server/decorators/user';
 import {CreatePostDto, PostEntity, UpdatePostDto} from "@schema/post"
 import { AccessTokenDTO } from '@schema/auth';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { FormDataRequest, MemoryStoredFile } from 'nestjs-form-data';
 @Controller('posts')
 export class PostsController {
     constructor(private readonly postsService: PostsService) {}
 
     @Post()
+    @FormDataRequest({storage: MemoryStoredFile})
     async create(@User<AccessTokenDTO>() token: AccessTokenDTO,  @Body() createPostDto: CreatePostDto): Promise<PostEntity> {
         return await this.postsService.create(createPostDto, token.sub);
     }

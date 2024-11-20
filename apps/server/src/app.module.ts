@@ -12,6 +12,8 @@ import { MailModule } from './modules/mail/mail.module';
 import { BullModule } from '@nestjs/bullmq';
 import { config } from 'process';
 import { BullConfigService } from './config/bull.config';
+import { S3Module } from './modules/s3/s3.module';
+import { MemoryStoredFile, NestjsFormDataModule } from 'nestjs-form-data';
 
 @Module({
     imports: [
@@ -22,17 +24,20 @@ import { BullConfigService } from './config/bull.config';
         BullModule.forRootAsync({
             useClass: BullConfigService
         }),
+
         // BullModule.forRoot({
         //     connection: {
         //         host: "172.24.54.59",
         //         port: 6379
         //     }
         // }),
+        NestjsFormDataModule.config({storage: MemoryStoredFile, isGlobal: true}),
         UsersModule,
         DatabaseModule,
         PostsModule,
         AuthModule,
         MailModule,
+        S3Module
     ],
     controllers: [AppController],
     providers: [

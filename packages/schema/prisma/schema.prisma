@@ -68,7 +68,7 @@ model Board {
 model Post {
   id            String   @id @default(uuid())
   title         String?
-  image_url     String
+  content_uri     String
   external_link String?
   description   String?
   tags          String?

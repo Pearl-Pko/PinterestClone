@@ -1,7 +1,7 @@
 import { OmitType, PartialType } from "nestjs-mapped-types";
 import {Post} from "@prisma/client"
 import { IsDate, IsNotEmpty, IsOptional, IsString, IsUrl, IsUUID } from "class-validator"
-
+import { IsFile, MaxFileSize, MemoryStoredFile } from "nestjs-form-data";
 
   type OptionalNullableProperties<T> = {
     [K in keyof T as null extends T[K] ? never : K]: T[K]
@@ -20,7 +20,7 @@ export class PostEntity implements NullablePost {
   title?: string | null | undefined;
 
   @IsUrl()
-  image_url: string;
+  content_uri: string;
 
   @IsUrl({}, {message: "Link must be a url"})
   @IsOptional()
@@ -42,6 +42,10 @@ export class PostEntity implements NullablePost {
   updated_at: Date;
 }
 
-export class CreatePostDto extends OmitType(PostEntity, ["author_id", "updated_at", "created_at", "id", "image_url"]) {}
+export class CreatePostDto extends OmitType(PostEntity, ["author_id", "updated_at", "created_at", "id", "content_uri"]) {
+  @IsFile()
+  @MaxFileSize(1e6, {message: "Max file size is 1mb"})
+  content: MemoryStoredFile;
+}
 
 export class UpdatePostDto extends PartialType(CreatePostDto) {}
