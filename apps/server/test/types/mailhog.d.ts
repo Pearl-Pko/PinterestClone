@@ -42,6 +42,6 @@ declare module 'mailhog' {
   
     function mailhog(options?: MailHogOptions): MailHog;
   
-    export default mailhog;;
+    export default mailhog;
   }
   

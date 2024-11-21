@@ -1,7 +1,12 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { DatabaseService } from '@server/modules/database/database.service';
 import { AuthorNotFoundException } from '@server/common/exceptions/exceptions';
-import { CreatePostDto, PostEntity, UpdatePostDto } from '@schema/post';
+import {
+    CreatePostDto,
+    GetAllPosts,
+    PostEntity,
+    UpdatePostDto,
+} from '@schema/post';
 import { PostStatus, Prisma } from '@prisma/client';
 import { S3Service } from '../s3/s3.service';
 import { addDays } from 'date-fns';
@@ -110,14 +115,26 @@ export class PostsService {
         }
     }
 
-    async getAllUserPosts(userId: string, status: PostStatus) {
+    async getAllUserPosts(userId: string, query: GetAllPosts) {
         try {
-            return await this.database.post.findMany({
+            const posts = await this.database.post.findMany({
                 where: {
                     author_id: userId,
-                    status: status,
+                    status: query.status,
+                },
+                skip: (query.page - 1) * query.limit,
+                take: query.limit,
+                orderBy: {
+                    created_at: 'desc',
                 },
             });
+            const totalCount = await this.database.post.count({
+                where: {
+                    author_id: userId,
+                    status: query.status,
+                },
+            });
+            return { posts, totalCount };
         } catch (error) {
             throw error;
         }
