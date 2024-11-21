@@ -64,6 +64,7 @@ export class PostsController {
             token.sub,
             query,
         );
+        
         return {
             page: query.page,
             totalCount: totalCount,

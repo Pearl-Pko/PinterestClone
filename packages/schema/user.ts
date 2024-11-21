@@ -3,7 +3,6 @@ import {z} from "zod"
 import { IsDate, IsEmail, IsEnum, IsNotEmpty, IsOptional, IsUUID,  } from 'class-validator';
 import { PickType } from "nestjs-mapped-types";
 import { Exclude, Expose } from "class-transformer";
-
 export class UserEntity implements User {
     @IsUUID()
     id: string;

@@ -14,6 +14,7 @@ import { config } from 'process';
 import { BullConfigService } from './config/bull.config';
 import { S3Module } from './modules/s3/s3.module';
 import { MemoryStoredFile, NestjsFormDataModule } from 'nestjs-form-data';
+import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
     imports: [
@@ -24,6 +25,7 @@ import { MemoryStoredFile, NestjsFormDataModule } from 'nestjs-form-data';
         BullModule.forRootAsync({
             useClass: BullConfigService
         }),
+        ScheduleModule.forRoot(),
 
         // BullModule.forRoot({
         //     connection: {

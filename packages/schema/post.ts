@@ -42,7 +42,7 @@ export class PostEntity implements NullablePost {
 
   @IsDate()
   @IsOptional()
-  expiry?: Date | null | undefined;
+  expiresAt?: Date | null | undefined;
 
   @IsDate()
   created_at: Date;
@@ -51,7 +51,7 @@ export class PostEntity implements NullablePost {
   updated_at: Date;
 }
 
-export class CreatePostDto extends OmitType(PostEntity, ["author_id", "updated_at", "created_at", "id", "content_uri", "expiry", "status"]) {
+export class CreatePostDto extends OmitType(PostEntity, ["author_id", "updated_at", "created_at", "id", "content_uri", "expiresAt", "status"]) {
   @IsFile()
   @MaxFileSize(1e6, {message: "Max file size is 1mb"})
   @HasMimeType("image/*", {message: "Content must be an image"})

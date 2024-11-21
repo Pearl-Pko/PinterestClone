@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { DatabaseService } from '@server/modules/database/database.service';
 import { AuthorNotFoundException } from '@server/common/exceptions/exceptions';
 import {
@@ -10,8 +10,11 @@ import {
 import { PostStatus, Prisma } from '@prisma/client';
 import { S3Service } from '../s3/s3.service';
 import { addDays } from 'date-fns';
+import { Cron, CronExpression } from '@nestjs/schedule';
 @Injectable()
 export class PostsService {
+    private logger = new Logger('Post');
+
     constructor(
         private readonly database: DatabaseService,
         private readonly s3Service: S3Service,
@@ -23,6 +26,7 @@ export class PostsService {
         const uri = await this.s3Service.uploadFile(
             content,
             `posts/${userId}/${Date.now()}`,
+            [{ Key: 'status', Value: 'draft' }],
         );
 
         const draftExpiry = addDays(Date.now(), 30);
@@ -32,7 +36,7 @@ export class PostsService {
                 data: {
                     ...rest,
                     content_uri: uri,
-                    expiry: draftExpiry,
+                    expiresAt: draftExpiry,
                     author: {
                         connect: {
                             id: userId,
@@ -94,15 +98,24 @@ export class PostsService {
 
     async publish(id: string): Promise<PostEntity> {
         try {
-            return await this.database.post.update({
+            const data = await this.database.post.update({
                 where: {
                     id: id,
                 },
                 data: {
                     status: 'posted',
-                    expiry: null,
+                    expiresAt: null,
                 },
             });
+
+            const match = data.content_uri.match(/public.+/);
+            const key = match?.[0];
+            if (key) {
+                await this.s3Service.modifyTag(key, [
+                    { Key: 'status', Value: 'posted' },
+                ]);
+            }
+            return data;
         } catch (error) {
             if (error instanceof Prisma.PrismaClientKnownRequestError) {
                 if (error.code === 'P2025') {
@@ -117,11 +130,13 @@ export class PostsService {
 
     async getAllUserPosts(userId: string, query: GetAllPosts) {
         try {
+            const filter: Prisma.PostWhereInput = {
+                author_id: userId,
+                status: query.status,
+                OR: [{ status: 'posted' }, { expiresAt: { gte: new Date() } }],
+            };
             const posts = await this.database.post.findMany({
-                where: {
-                    author_id: userId,
-                    status: query.status,
-                },
+                where: filter,
                 skip: (query.page - 1) * query.limit,
                 take: query.limit,
                 orderBy: {
@@ -129,12 +144,24 @@ export class PostsService {
                 },
             });
             const totalCount = await this.database.post.count({
-                where: {
-                    author_id: userId,
-                    status: query.status,
-                },
+                where: filter,
             });
             return { posts, totalCount };
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    @Cron(CronExpression.EVERY_DAY_AT_5PM)
+    async cleanupOldDrafts() {
+        try {
+            const { count } = await this.database.post.deleteMany({
+                where: {
+                    status: 'draft',
+                    expiresAt: { lt: new Date() },
+                },
+            });
+            this.logger.log(`Cleaned up ${count} records`);
         } catch (error) {
             throw error;
         }

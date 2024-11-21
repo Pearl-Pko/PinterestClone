@@ -78,7 +78,7 @@ model Post {
   created_at    DateTime   @default(now())
   updated_at    DateTime   @updatedAt
   status        PostStatus @default(draft)
-  expiry        DateTime?
+  expiresAt     DateTime?
 }
 
 model Pin {
