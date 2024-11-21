@@ -9,10 +9,11 @@ import {
     NotFoundException,
     UseInterceptors,
     UploadedFile,
+    Query,
 } from '@nestjs/common';
 import { PostsService } from './posts.service';
 import { User } from '@server/decorators/user';
-import {CreatePostDto, PostEntity, UpdatePostDto} from "@schema/post"
+import {CreatePostDto, GetAllPosts, PostEntity, UpdatePostDto} from "@schema/post"
 import { AccessTokenDTO } from '@schema/auth';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { FormDataRequest, MemoryStoredFile } from 'nestjs-form-data';
@@ -34,5 +35,16 @@ export class PostsController {
     @Delete(':id')
     async remove(@Param('id') id: string): Promise<PostEntity> {
         return await this.postsService.remove(id);
+    }
+
+    @Patch(":id/publish")
+    async publishPost(@Param('id') id: string) : Promise<PostEntity> {
+        return await this.postsService.publish(id);
+    }
+
+    @Get() 
+    async getAllUserPosts(@User<AccessTokenDTO>() token: AccessTokenDTO, @Query() query : GetAllPosts)  : Promise<PostEntity[]> {
+        console.log("status", query.status) 
+        return this.postsService.getAllUserPosts(token.sub, query.status);
     }
 }

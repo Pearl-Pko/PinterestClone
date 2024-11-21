@@ -1,4 +1,4 @@
-import { User, Post, Prisma, $Enums } from "@prisma/client";
+import { User, Post, Prisma, $Enums, Gender } from "@prisma/client";
 import {z} from "zod"
 import { IsDate, IsEmail, IsEnum, IsNotEmpty, IsOptional, IsUUID,  } from 'class-validator';
 import { PickType } from "nestjs-mapped-types";
@@ -32,8 +32,8 @@ export class UserEntity implements User {
     @IsOptional()
     date_of_birth: Date | null;
 
-    @IsEnum(["Male", "Female", "Other"])
-    gender: $Enums.Gender | null;
+    @IsEnum(Gender)
+    gender: Gender | null;
 
     @IsOptional()
     country: string | null;

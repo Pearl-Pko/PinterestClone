@@ -66,17 +66,19 @@ model Board {
 }
 
 model Post {
-  id            String   @id @default(uuid())
+  id            String     @id @default(uuid())
   title         String?
-  content_uri     String
+  content_uri   String
   external_link String?
   description   String?
   tags          String?
-  author        User     @relation(fields: [author_id], references: [id])
+  author        User       @relation(fields: [author_id], references: [id])
   author_id     String
   Pin           Pin[]
-  created_at    DateTime @default(now())
-  updated_at    DateTime @updatedAt
+  created_at    DateTime   @default(now())
+  updated_at    DateTime   @updatedAt
+  status        PostStatus @default(draft)
+  expiry        DateTime?
 }
 
 model Pin {
@@ -95,4 +97,9 @@ enum Gender {
   Male
   Female
   Other
+}
+
+enum PostStatus {
+  draft
+  posted
 }
