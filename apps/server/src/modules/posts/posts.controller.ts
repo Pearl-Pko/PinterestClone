@@ -37,21 +37,29 @@ export class PostsController {
     }
 
     @Patch(':id')
+    @FormDataRequest({ storage: MemoryStoredFile })
     async update(
         @Param('id') id: string,
+        @User<AccessTokenDTO>() token: AccessTokenDTO,
         @Body() updatePostDto: UpdatePostDto,
     ) {
-        return await this.postsService.update(id, updatePostDto);
+        return await this.postsService.update(id, token.sub, updatePostDto);
     }
 
     @Delete(':id')
-    async remove(@Param('id') id: string): Promise<PostEntity> {
-        return await this.postsService.remove(id);
+    async remove(
+        @Param('id') id: string,
+        @User<AccessTokenDTO>() token: AccessTokenDTO,
+    ): Promise<PostEntity> {
+        return await this.postsService.remove(id, token.sub);
     }
 
     @Patch(':id/publish')
-    async publishPost(@Param('id') id: string): Promise<PostEntity> {
-        return await this.postsService.publish(id);
+    async publishPost(
+        @Param('id') id: string,
+        @User<AccessTokenDTO>() token: AccessTokenDTO,
+    ): Promise<PostEntity> {
+        return await this.postsService.publish(id, token.sub);
     }
 
     @Get()
@@ -64,7 +72,7 @@ export class PostsController {
             token.sub,
             query,
         );
-        
+
         return {
             page: query.page,
             totalCount: totalCount,

@@ -1,4 +1,10 @@
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import {
+    HttpException,
+    HttpStatus,
+    Injectable,
+    Logger,
+    NotFoundException,
+} from '@nestjs/common';
 import { DatabaseService } from '@server/modules/database/database.service';
 import { AuthorNotFoundException } from '@server/common/exceptions/exceptions';
 import {
@@ -11,6 +17,7 @@ import { PostStatus, Prisma } from '@prisma/client';
 import { S3Service } from '../s3/s3.service';
 import { addDays } from 'date-fns';
 import { Cron, CronExpression } from '@nestjs/schedule';
+import { HttpWaitStrategy } from 'testcontainers/build/wait-strategies/http-wait-strategy';
 @Injectable()
 export class PostsService {
     private logger = new Logger('Post');
@@ -56,14 +63,38 @@ export class PostsService {
         }
     }
 
-    async update(id: string, data: UpdatePostDto): Promise<PostEntity> {
+    async update(
+        id: string,
+        userId: string,
+        data: UpdatePostDto,
+    ): Promise<PostEntity> {
         try {
-            return await this.database.post.update({
+            const post = await this.getOnePost(id, userId, true);
+            const { content, ...rest } = data;
+
+            let uri = post.content_uri;
+
+            if (content) {
+                uri = await this.s3Service.uploadFile(
+                    content,
+                    `posts/${userId}/${Date.now()}`,
+                    [{ Key: 'status', Value: post.status }],
+                );
+                const match = post.content_uri.match(/public.+/);
+                const key = match?.[0];
+                if (key) {
+                    await this.s3Service.deleteFile(key);
+                    console.log('old key', key);
+                }
+            }
+
+            const updatedPost = await this.database.post.update({
                 where: {
                     id: id,
                 },
-                data: data,
+                data: { ...rest, content_uri: uri },
             });
+            return updatedPost;
         } catch (error) {
             if (error instanceof Prisma.PrismaClientKnownRequestError) {
                 // Handle the "Record does not exist" error
@@ -77,8 +108,16 @@ export class PostsService {
         }
     }
 
-    async remove(id: string): Promise<PostEntity> {
+    async remove(id: string, userId: string): Promise<PostEntity> {
         try {
+            const post = await this.getOnePost(id, userId, true);
+
+            const match = post.content_uri.match(/public.+/);
+            const key = match?.[0];
+            if (key) {
+                await this.s3Service.deleteFile(key);
+            }
+
             return await this.database.post.delete({
                 where: {
                     id: id,
@@ -96,8 +135,11 @@ export class PostsService {
         }
     }
 
-    async publish(id: string): Promise<PostEntity> {
+    async publish(id: string, userId: string): Promise<PostEntity> {
         try {
+            await this.getOnePost(id, userId, true);
+
+
             const data = await this.database.post.update({
                 where: {
                     id: id,
@@ -126,6 +168,27 @@ export class PostsService {
             }
             throw error;
         }
+    }
+
+    async getOnePost(id: string, userId: string, mutation: boolean = false) {
+        const post = await this.database.post.findUnique({
+            where: {
+                id: id,
+            },
+        });
+
+        if (!post) {
+            throw new NotFoundException(`Post with id '${id}' not found`);
+        }
+
+        if (mutation && post.author_id != userId) {
+            throw new HttpException(
+                'You do not have permission to access this resource',
+                HttpStatus.FORBIDDEN,
+            );
+        }
+
+        return post;
     }
 
     async getAllUserPosts(userId: string, query: GetAllPosts) {

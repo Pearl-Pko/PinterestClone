@@ -1,4 +1,5 @@
 import {
+    DeleteObjectCommand,
     PutBucketLifecycleConfigurationCommand,
     PutObjectCommand,
     PutObjectTaggingCommand,
@@ -59,6 +60,21 @@ export class S3Service {
             return true;
         } catch (error) {
             throw new Error(`Failed to upload file: ${error.message}`);
+        }
+    }
+
+    async deleteFile(key: string) {
+        const command = new DeleteObjectCommand({
+            Bucket: this.bucketName,
+            Key: key,
+        });
+
+        try {
+            const data = await this.s3Client.send(command);
+            await this.s3Client.send(command);
+            return true;
+        } catch (error) {
+            throw new Error(`Failed to delete file: ${error.message}`);
         }
     }
 }
