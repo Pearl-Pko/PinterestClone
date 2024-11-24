@@ -1,6 +1,6 @@
+import "reflect-metadata";
 import "./globals.css";
 import AppProvider from "./AppProvider";
-import "reflect-metadata";
 import DrawerHeader from "../components/DrawerHeader";
 
 export default function RootLayout({

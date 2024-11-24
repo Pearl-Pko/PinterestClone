@@ -1,7 +1,6 @@
 import { OmitType, PartialType } from "nestjs-mapped-types";
 import {Post, PostStatus} from "@prisma/client"
 import { IsDate, IsEnum, IsNotEmpty, IsOptional, IsString, IsUrl, IsUUID } from "class-validator"
-import { HasMimeType, IsFile, MaxFileSize, MemoryStoredFile } from "nestjs-form-data";
 import { PaginatedQuery } from "./util";
 
   type OptionalNullableProperties<T> = {
@@ -51,14 +50,6 @@ export class PostEntity implements NullablePost {
   updated_at: Date;
 }
 
-export class CreatePostDto extends OmitType(PostEntity, ["author_id", "updated_at", "created_at", "id", "content_uri", "expiresAt", "status"]) {
-  @IsFile()
-  @MaxFileSize(1e6, {message: "Max file size is 1mb"})
-  @HasMimeType("image/*", {message: "Content must be an image"})
-  content: MemoryStoredFile;
-}
-
-export class UpdatePostDto extends PartialType(CreatePostDto) {}
 
 export class GetAllPosts extends PaginatedQuery {
   @IsEnum(PostStatus)

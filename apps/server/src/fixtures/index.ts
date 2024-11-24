@@ -1,5 +1,4 @@
 import { User } from '@prisma/client';
-import { CreatePostDto, UpdatePostDto } from '@schema/post';
 import { CreateUserDto } from '@schema/user';
 
 export const MockUserEntity: User = {

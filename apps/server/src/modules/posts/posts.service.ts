@@ -8,16 +8,14 @@ import {
 import { DatabaseService } from '@server/modules/database/database.service';
 import { AuthorNotFoundException } from '@server/common/exceptions/exceptions';
 import {
-    CreatePostDto,
     GetAllPosts,
     PostEntity,
-    UpdatePostDto,
 } from '@schema/post';
 import { PostStatus, Prisma } from '@prisma/client';
 import { S3Service } from '../s3/s3.service';
 import { addDays } from 'date-fns';
 import { Cron, CronExpression } from '@nestjs/schedule';
-import { HttpWaitStrategy } from 'testcontainers/build/wait-strategies/http-wait-strategy';
+import { CreatePostDto, UpdatePostDto } from './dto';
 @Injectable()
 export class PostsService {
     private logger = new Logger('Post');
