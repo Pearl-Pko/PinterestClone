@@ -16,6 +16,7 @@ import { S3Service } from '../s3/s3.service';
 import { addDays } from 'date-fns';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { CreatePostDto, UpdatePostDto } from './dto';
+import { PaginatedQuery } from '@schema/util';
 @Injectable()
 export class PostsService {
     private logger = new Logger('Post');
@@ -179,6 +180,13 @@ export class PostsService {
             throw new NotFoundException(`Post with id '${id}' not found`);
         }
 
+        if (post.status === "draft" && post.author_id != userId) {
+            throw new HttpException(
+                'You do not have permission to access this resource',
+                HttpStatus.FORBIDDEN,
+            );
+        }
+
         if (mutation && post.author_id != userId) {
             throw new HttpException(
                 'You do not have permission to access this resource',
@@ -189,11 +197,11 @@ export class PostsService {
         return post;
     }
 
-    async getAllUserPosts(userId: string, query: GetAllPosts) {
+    async getAllUserPosts(userId: string, query: PaginatedQuery, status: PostStatus) {
         try {
             const filter: Prisma.PostWhereInput = {
                 author_id: userId,
-                status: query.status,
+                status: status,
                 OR: [{ status: 'posted' }, { expiresAt: { gte: new Date() } }],
             };
             const posts = await this.database.post.findMany({

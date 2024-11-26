@@ -13,10 +13,7 @@ import {
 } from '@nestjs/common';
 import { PostsService } from './posts.service';
 import { User } from '@server/decorators/user';
-import {
-    GetAllPosts,
-    PostEntity,
-} from '@schema/post';
+import { GetAllPosts, GetUserPosts, PostEntity } from '@schema/post';
 import { AccessTokenDTO } from '@schema/auth';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { FormDataRequest, MemoryStoredFile } from 'nestjs-form-data';
@@ -61,6 +58,32 @@ export class PostsController {
         return await this.postsService.publish(id, token.sub);
     }
 
+    @Get(':id')
+    async getPost(
+        @Param('id') id: string,
+        @User<AccessTokenDTO>() token: AccessTokenDTO,
+    ) {
+        return await this.postsService.getOnePost(id, token.sub);
+    }
+
+    async getAllPostsForAUser(
+        @Query() query: GetUserPosts,
+        @User<AccessTokenDTO>() token: AccessTokenDTO,
+    ): Promise<PaginatedResponse<PostEntity>> {
+        const { posts, totalCount } = await this.postsService.getAllUserPosts(
+            token.sub,
+            query,
+            'posted'
+        );
+
+        return {
+            page: query.page,
+            totalCount: totalCount,
+            limit: query.limit,
+            data: posts,
+        };
+    }
+
     @Get()
     async getAllUserPosts(
         @User<AccessTokenDTO>() token: AccessTokenDTO,
@@ -70,6 +93,7 @@ export class PostsController {
         const { posts, totalCount } = await this.postsService.getAllUserPosts(
             token.sub,
             query,
+            query.status
         );
 
         return {

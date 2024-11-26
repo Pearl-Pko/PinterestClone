@@ -51,8 +51,13 @@ export class PostEntity implements NullablePost {
 }
 
 
+
 export class GetAllPosts extends PaginatedQuery {
   @IsEnum(PostStatus)
   @IsOptional()
   status: PostStatus = "posted"
+}
+
+export class GetUserPosts extends PaginatedQuery {
+  userId: string;
 }
