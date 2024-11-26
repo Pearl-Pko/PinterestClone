@@ -16,7 +16,7 @@ import {
   LoginUserDto,
   ResetPasswordDto,
 } from "@schema/user";
-import { PasswordEyeIcon, PasswordHiddenEyeIcon } from "@web/public";
+import { PasswordEyeIcon, PasswordHiddenEyeIcon } from "@web/src/public";
 
 export default function page() {
   const router = useRouter();

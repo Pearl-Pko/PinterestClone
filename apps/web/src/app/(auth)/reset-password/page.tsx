@@ -1,7 +1,7 @@
 "use client";
 import { classValidatorResolver } from "@hookform/resolvers/class-validator";
 import { ResetPasswordDto } from "@schema/user";
-import { PasswordEyeIcon, PasswordHiddenEyeIcon } from "@web/public";
+import { PasswordEyeIcon, PasswordHiddenEyeIcon } from "@web/src/public";
 import ErrorInputField from "@web/src/components/common/ErrorInputField";
 import Button from "@web/src/components/common/Button";
 import { ResetPasswordDtoWithConfirmation } from "@web/src/schema/user";

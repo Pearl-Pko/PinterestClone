@@ -10,9 +10,14 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body>
-        <DrawerHeader/>
-        <AppProvider>{children}</AppProvider>
+      <body className="">
+        <div className="flex flex-col h-dvh max-h-dvh">
+          <DrawerHeader />
+          <div className="flex-1  max-h-full overflow-y-auto">
+            {/* <p>ds</p> */}
+            <AppProvider>{children}</AppProvider>
+          </div>
+        </div>
       </body>
     </html>
   );

@@ -1,5 +1,5 @@
 import React from "react";
-import ErrorIcon from "@web/public/error.svg";
+import ErrorIcon from "@web/src/public/error.svg";
 
 export default function ErrorInputField({message}: {message: string}) {
   return (
