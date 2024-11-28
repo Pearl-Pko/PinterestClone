@@ -227,7 +227,7 @@ export default function CreatePost({
   return (
     <form
       className={clsx(
-        "flex-1 border-l-2 h-full",
+        "flex-1 border-l-2 h-full w-full flex flex-col",
         isSubmitting && "opacity-35 pointer-events-none",
       )}
       onSubmit={handleSubmit(onSubmit)}
@@ -255,12 +255,12 @@ export default function CreatePost({
           </div>
         )}
       </div>
-      <div className="grid p-5 mx-auto place-content-center grid-cols-5 max-w-[1000px] gap-10">
-        <div className="col-span-2 flex gap-5 flex-col">
+      <div className="p-5 gap-10 flex flex-row justify-center w-full flex-1 overflow-y-auto">
+        <div className="flex gap-5 flex-col w-[350px]">
           {!previewUrl ? (
             <label
               htmlFor="content"
-              className="bg-gray-200 relative rounded-3xl h-[400px] grid place-content-center"
+              className="bg-gray-200 relative rounded-3xl h-full grid place-content-center"
             >
               <div className="flex flex-col justify-center items-center">
                 <UploadIcon />
@@ -272,7 +272,7 @@ export default function CreatePost({
               </p>
             </label>
           ) : (
-            <div className="rounded-3xl relative overflow-hidden">
+            <div className="relative">
               <label
                 htmlFor="content"
                 className="w-10 h-10 absolute bg-white rounded-full right-3 top-3 flex justify-center items-center"
@@ -281,7 +281,7 @@ export default function CreatePost({
               </label>
               <img
                 src={previewUrl}
-                className="object-cover w-full h-full object-center "
+                className="object-cover w-full h-full object-center rounded-3xl"
               />
             </div>
           )}
@@ -306,7 +306,7 @@ export default function CreatePost({
         </div>
         <div
           className={clsx(
-            "col-span-3 flex flex-col gap-5",
+            "flex flex-col gap-5 max-w-[500px] w-full",
             errors.content && "opacity-35 pointer-events-none",
           )}
         >

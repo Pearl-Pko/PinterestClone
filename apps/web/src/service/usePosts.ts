@@ -1,7 +1,7 @@
 import { AxiosResponse } from "axios";
 import { CreatePostWebDto } from "../schema/post";
 import api from "../utils/api";
-import { PostEntity } from "@schema/post";
+import { BatchEditPosts, PostEntity } from "@schema/post";
 import { PostStatus } from '@prisma/client';
 import { PaginatedQuery, PaginatedResponse } from "@schema/util";
 
@@ -26,6 +26,10 @@ export const useUpdatePost = async ({id, data} : {id: string, data: FormData}) =
   return await api.patch(`/posts/${id}`, data)
 }
 
+export const useDuplicatePost = async (id: string) => {
+  return await api.post(`/posts/${id}/duplicate`)
+}
+
 export const usePublishPost = async (id: string) => {
   return await api.patch(`/posts/${id}/publish`)
 }
@@ -36,5 +40,9 @@ export const useGetAllPostsForAUser = async (userId: string) => {
 
 export const useGetAllUserPosts = async (status: PostStatus) => {
   return await api.get(`/posts?status=${status}`) as AxiosResponse<PaginatedResponse<PostEntity>>;
+}
+
+export const useBatchEditPosts = async (data: BatchEditPosts) => {
+  return await api.patch(`/posts/batch-edit`, data)
 }
 

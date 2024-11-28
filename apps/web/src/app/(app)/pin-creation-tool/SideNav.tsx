@@ -1,11 +1,21 @@
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { CloseSideNavIcon, OpenSideNavIcon, ResetPinIcon } from "@web/public";
 import { Checkbox } from "@web/src/components/ui/checkbox";
-import { useGetAllUserPosts } from "@web/src/service/usePosts";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@web/src/components/ui/popover";
+import {
+  useDeletePost,
+  useDuplicatePost,
+  useGetAllUserPosts,
+} from "@web/src/service/usePosts";
 import clsx from "clsx";
 import { formatDistanceToNowStrict } from "date-fns";
 import { Ellipsis } from "lucide-react";
-import React, { useState } from "react";
+import { useState } from "react";
+import { PopoverClose } from "@radix-ui/react-popover";
 
 export default function SideNav({
   onSelectPost,
@@ -18,6 +28,24 @@ export default function SideNav({
   const { data } = useQuery({
     queryKey: ["getAllPosts", "draft"],
     queryFn: () => useGetAllUserPosts("draft"),
+  });
+  const queryClient = useQueryClient();
+  const [modalOpen, setModalOpen] = useState(false);
+
+  const deleteMutation = useMutation({
+    mutationFn: useDeletePost,
+    onSuccess: (data, variables) => {
+      if (selectedPostId == variables) {
+        onSelectPost("");
+      }
+      queryClient.invalidateQueries({ queryKey: ["getAllPosts", "draft"] });
+    },
+  });
+  const duplicateMutation = useMutation({
+    mutationFn: useDuplicatePost,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["getAllPosts", "draft"] });
+    },
   });
 
   const drafts = data?.data.data;
@@ -41,10 +69,12 @@ export default function SideNav({
           >
             <OpenSideNavIcon />
           </button>
-          <button onClick={() => {
-            // onCreateNewPost();
-            onSelectPost("");
-          }}>
+          <button
+            onClick={() => {
+              // onCreateNewPost();
+              onSelectPost("");
+            }}
+          >
             <ResetPinIcon />
           </button>
         </>
@@ -102,9 +132,31 @@ export default function SideNav({
                       )}
                     </div>
                   </div>
-                  <div>
-                    <Ellipsis />
-                  </div>
+                  <Popover>
+                    <PopoverTrigger>
+                      <div className="hover:bg-gray-300 rounded-full p-1">
+                        <Ellipsis />
+                      </div>
+                    </PopoverTrigger>
+                    <PopoverContent className="flex flex-col w-auto px-2 gap-1 py-2 rounded-xl">
+                      <PopoverClose
+                        className="hover:bg-gray-200 px-3 py-2 font-semibold rounded-lg text-left"
+                        onClick={() => {
+                          duplicateMutation.mutate(draft.id);
+                        }}
+                      >
+                        Duplicate
+                      </PopoverClose>
+                      <PopoverClose
+                        className="hover:bg-gray-200 px-3 py-2 font-semibold rounded-lg text-left"
+                        onClick={() => {
+                          deleteMutation.mutate(draft.id);
+                        }}
+                      >
+                        Delete
+                      </PopoverClose>
+                    </PopoverContent>
+                  </Popover>
                 </div>
               );
             })}

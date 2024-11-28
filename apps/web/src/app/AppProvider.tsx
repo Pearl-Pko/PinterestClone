@@ -12,7 +12,9 @@ export default function AppProvider({
 }) {
   return (
     <QueryClientProvider client={queryClient}>
-      <SessionProvider>{children}</SessionProvider>
+      <SessionProvider>
+        
+        {children}</SessionProvider>
     </QueryClientProvider>
   );
 }
