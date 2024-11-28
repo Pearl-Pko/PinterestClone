@@ -7,16 +7,14 @@ import {
 } from '@nestjs/common';
 import { DatabaseService } from '@server/modules/database/database.service';
 import { AuthorNotFoundException } from '@server/common/exceptions/exceptions';
-import {
-    GetAllPosts,
-    PostEntity,
-} from '@schema/post';
+import { GetAllPosts, PostEntity } from '@schema/post';
 import { PostStatus, Prisma } from '@prisma/client';
 import { S3Service } from '../s3/s3.service';
 import { addDays } from 'date-fns';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { CreatePostDto, UpdatePostDto } from './dto';
 import { PaginatedQuery } from '@schema/util';
+import { DescribeJobCommand } from '@aws-sdk/client-s3-control';
 @Injectable()
 export class PostsService {
     private logger = new Logger('Post');
@@ -73,7 +71,7 @@ export class PostsService {
 
             let uri = post.content_uri;
 
-            if (content) {
+            if (content && post.status == 'draft') {
                 uri = await this.s3Service.uploadFile(
                     content,
                     `posts/${userId}/${Date.now()}`,
@@ -136,8 +134,14 @@ export class PostsService {
 
     async publish(id: string, userId: string): Promise<PostEntity> {
         try {
-            await this.getOnePost(id, userId, true);
-
+            const post = await this.getOnePost(id, userId, true);
+            
+            if (post.status === 'posted') {
+                throw new HttpException(
+                    'This post has already been published',
+                    HttpStatus.CONFLICT,
+                );
+            }
 
             const data = await this.database.post.update({
                 where: {
@@ -180,7 +184,7 @@ export class PostsService {
             throw new NotFoundException(`Post with id '${id}' not found`);
         }
 
-        if (post.status === "draft" && post.author_id != userId) {
+        if (post.status === 'draft' && post.author_id != userId) {
             throw new HttpException(
                 'You do not have permission to access this resource',
                 HttpStatus.FORBIDDEN,
@@ -197,7 +201,11 @@ export class PostsService {
         return post;
     }
 
-    async getAllUserPosts(userId: string, query: PaginatedQuery, status: PostStatus) {
+    async getAllUserPosts(
+        userId: string,
+        query: PaginatedQuery,
+        status: PostStatus,
+    ) {
         try {
             const filter: Prisma.PostWhereInput = {
                 author_id: userId,
@@ -219,6 +227,57 @@ export class PostsService {
         } catch (error) {
             throw error;
         }
+    }
+
+    async batchEdit(userId: string, data: UpdatePostDto, postIds: string[]) {
+        return await this.database.post.updateMany({
+            data: data,
+            where: {
+                id: { in: postIds },
+                author_id: userId,
+            },
+        });
+    }
+
+    async batchDelete(userId: string, postIds: string[]) {
+        return await this.database.post.deleteMany({
+            where: {
+                id: { in: postIds },
+                author_id: userId,
+            },
+        });
+    }
+
+    async batchPublish(userId: string, postIds: string[]) {
+        const query: Prisma.PostWhereInput = {
+            author_id: userId,
+            id: { in: postIds },
+            status: 'draft',
+        };
+
+        const posts = await this.database.post.findMany({
+            where: query,
+        });
+
+        const content_keys = posts.map(
+            (post) => post.content_uri.match(/public.+/)?.[0] || '',
+        );
+
+        const { count } = await this.database.post.updateMany({
+            where: query,
+            data: {
+                status: 'posted',
+                expiresAt: null,
+            },
+        });
+
+        if (posts.length > 0) {
+            // run asynchronously in the background
+            this.s3Service.bulkApplyTags(content_keys, [
+                { Key: 'status', Value: 'posted' },
+            ]);
+        }
+        return count;
     }
 
     @Cron(CronExpression.EVERY_DAY_AT_5PM)

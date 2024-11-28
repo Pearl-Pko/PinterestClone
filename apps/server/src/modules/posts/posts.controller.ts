@@ -13,11 +13,17 @@ import {
 } from '@nestjs/common';
 import { PostsService } from './posts.service';
 import { User } from '@server/decorators/user';
-import { GetAllPosts, GetUserPosts, PostEntity } from '@schema/post';
+import {
+    BatchEditPosts,
+    BatchPosts,
+    GetAllPosts,
+    GetUserPosts,
+    PostEntity,
+} from '@schema/post';
 import { AccessTokenDTO } from '@schema/auth';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { FormDataRequest, MemoryStoredFile } from 'nestjs-form-data';
-import { PaginatedResponse } from '@schema/util';
+import { ApiResponse, PaginatedQuery, PaginatedResponse } from '@schema/util';
 import { CreatePostDto, UpdatePostDto } from './dto';
 @Controller('posts')
 export class PostsController {
@@ -30,6 +36,55 @@ export class PostsController {
         @Body() createPostDto: CreatePostDto,
     ): Promise<PostEntity> {
         return await this.postsService.create(createPostDto, token.sub);
+    }
+
+    @Patch('batch-edit')
+    async batchUpdate(
+        @Body() posts: BatchEditPosts,
+        @User<AccessTokenDTO>() token: AccessTokenDTO,
+    ): Promise<ApiResponse> {
+        const { postIds, ...updatePostDto } = posts;
+        const payload = await this.postsService.batchEdit(
+            token.sub,
+            updatePostDto,
+            postIds,
+        );
+        return {
+            message: `Successfully edited ${payload.count} out of ${posts.postIds.length} posts`,
+            status: true,
+        };
+    }
+
+    @Patch('batch-publish')
+    async batchPublish(
+        @Body() posts: BatchPosts,
+        @User<AccessTokenDTO>() token: AccessTokenDTO,
+    ): Promise<ApiResponse> {
+        const count = await this.postsService.batchPublish(
+            token.sub,
+            posts.postIds,
+        );
+
+        return {
+            message: `Successfully published ${count} out of ${posts.postIds.length} posts`,
+            status: true,
+        };
+    }
+
+    @Delete('batch-delete')
+    async batchDelete(
+        @Body() posts: BatchPosts,
+        @User<AccessTokenDTO>() token: AccessTokenDTO,
+    ): Promise<ApiResponse> {
+        const count = await this.postsService.batchDelete(
+            token.sub,
+            posts.postIds,
+        );
+
+        return {
+            message: `Successfully deleted ${count.count} out of ${posts.postIds.length} posts`,
+            status: true,
+        };
     }
 
     @Patch(':id')
@@ -66,14 +121,15 @@ export class PostsController {
         return await this.postsService.getOnePost(id, token.sub);
     }
 
+    @Get('/user/:userId')
     async getAllPostsForAUser(
-        @Query() query: GetUserPosts,
-        @User<AccessTokenDTO>() token: AccessTokenDTO,
+        @Param('userId') userId: string,
+        @Query() query: PaginatedQuery,
     ): Promise<PaginatedResponse<PostEntity>> {
         const { posts, totalCount } = await this.postsService.getAllUserPosts(
-            token.sub,
+            userId,
             query,
-            'posted'
+            'posted',
         );
 
         return {
@@ -89,11 +145,10 @@ export class PostsController {
         @User<AccessTokenDTO>() token: AccessTokenDTO,
         @Query() query: GetAllPosts,
     ): Promise<PaginatedResponse<PostEntity>> {
-        console.log('status', query.status);
         const { posts, totalCount } = await this.postsService.getAllUserPosts(
             token.sub,
             query,
-            query.status
+            query.status,
         );
 
         return {
@@ -103,4 +158,14 @@ export class PostsController {
             data: posts,
         };
     }
+
+    // @Delete()
+    // async bactchDelete() {
+
+    // }
+
+    // @Post()
+    // async batchPublish() {
+
+    // }
 }

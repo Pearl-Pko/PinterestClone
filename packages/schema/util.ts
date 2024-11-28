@@ -23,3 +23,9 @@ export class PaginatedResponse<T> {
     page: number;
     totalCount: number;
 }
+
+export class ApiResponse<T = void> {
+    status: boolean;
+    message: string;
+    data?: T 
+}
