@@ -159,13 +159,11 @@ export class PostsController {
         };
     }
 
-    // @Delete()
-    // async bactchDelete() {
-
-    // }
-
-    // @Post()
-    // async batchPublish() {
-
-    // }
+    @Post(':id/duplicate')
+    async duplicatePosts(
+        @User<AccessTokenDTO>() token: AccessTokenDTO,
+        @Param('id') postId: string,
+    ) {
+        return await this.postsService.duplicatePosts(token.sub, postId);
+    }
 }

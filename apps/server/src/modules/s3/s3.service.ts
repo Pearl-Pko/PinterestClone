@@ -1,4 +1,5 @@
 import {
+    CopyObjectCommand,
     DeleteObjectCommand,
     PutBucketLifecycleConfigurationCommand,
     PutObjectCommand,
@@ -58,6 +59,24 @@ export class S3Service {
         }
     }
 
+    async CopyObject(sourceKey: string, destinationKey: string, tags: S3Tag[]) {
+        destinationKey = 'public/' + destinationKey;
+
+        const command = new CopyObjectCommand({
+            Bucket: this.bucketName,
+            CopySource: `${this.bucketName}/${sourceKey}`,
+            Key: destinationKey,
+            Tagging: tags.map((tag) => `${tag.Key}=${tag.Value}`).join('&'),
+        });
+
+        try {
+            const data = await this.s3Client.send(command);
+            return `https://${this.bucketName}.s3.amazonaws.com/${destinationKey}`;
+        } catch (error) {
+            throw error;
+        }
+    }
+
     async modifyTag(key: string, tags: S3Tag[]) {
         const command = new PutObjectTaggingCommand({
             Bucket: this.bucketName,
@@ -98,7 +117,9 @@ export class S3Service {
         // const job = await this.s3ControlClient.send(command2);
         // console.log("job", job.Job)
         // return ;
-        const manifest = keys.map((key) => `${this.bucketName},${keys}`).join('\n');
+        const manifest = keys
+            .map((key) => `${this.bucketName},${keys}`)
+            .join('\n');
         const key = `manifest/${Date.now()}`;
         const manifestETag = await this.uploadManifest(key, manifest);
 
@@ -124,11 +145,11 @@ export class S3Service {
                     Fields: ['Bucket', 'Key'],
                 },
             },
-            RoleArn: this.configService.get<string>("BATCH_S3_ROLE"),
+            RoleArn: this.configService.get<string>('BATCH_S3_ROLE'),
         });
         try {
             const response = await this.s3ControlClient.send(command);
-        console.log('response', response.JobId);
+            console.log('response', response.JobId);
             this.logger.log(`Batch job created ${response.JobId}`);
         } catch (error) {
             throw error;
@@ -136,6 +157,7 @@ export class S3Service {
     }
 
     async uploadManifest(key: string, manifest: string) {
+
         const command = new PutObjectCommand({
             Bucket: this.bucketName,
             Key: key,

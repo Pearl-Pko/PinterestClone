@@ -135,7 +135,7 @@ export class PostsService {
     async publish(id: string, userId: string): Promise<PostEntity> {
         try {
             const post = await this.getOnePost(id, userId, true);
-            
+
             if (post.status === 'posted') {
                 throw new HttpException(
                     'This post has already been published',
@@ -291,6 +291,49 @@ export class PostsService {
             });
             this.logger.log(`Cleaned up ${count} records`);
         } catch (error) {
+            throw error;
+        }
+    }
+
+    async duplicatePosts(userId: string, id: string) {
+        const post = await this.getOnePost(id, userId, true);
+
+        const match = post.content_uri.match(/public.+/);
+        const key = match?.[0];
+
+        if (!key) throw Error(`Invalid conntent uri for post ${post.id}`);
+
+        const destinationKey = `posts/${userId}/${Date.now()}`;
+
+        const newUri = await this.s3Service.CopyObject(key, destinationKey, [
+            { Key: 'status', Value: post.status },
+        ]);
+
+        const draftExpiry = addDays(Date.now(), 30);
+
+        try {
+            return await this.database.post.create({
+                data: {
+                    title: post.title,
+                    description: post.description,
+                    external_link: post.external_link,
+                    status: post.status,
+                    tags: post.tags,
+                    content_uri: newUri,
+                    expiresAt: post.status == 'draft' ? draftExpiry : null,
+                    author: {
+                        connect: {
+                            id: userId,
+                        },
+                    },
+                },
+            });
+        } catch (error) {
+            if (error instanceof Prisma.PrismaClientKnownRequestError) {
+                if (error.code === 'P2025') {
+                    throw new AuthorNotFoundException(userId);
+                }
+            }
             throw error;
         }
     }
