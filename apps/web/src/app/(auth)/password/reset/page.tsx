@@ -93,7 +93,7 @@ export default function page() {
             <div className="flex flex-row items-center justify-center w-full gap-3">
               <Button
                 text="Try again"
-                primary={false}
+                variant="secondary"
                 onClick={() =>
                   reset({ email: searchParams.get("ue") || undefined })
                 }

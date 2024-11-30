@@ -12,3 +12,6 @@ export { default as PinterestIcon } from "./pinterest-logo.svg";
 export { default as EditIcon } from "./edit-icon.svg";
 export {default as SearchIcon} from "./search-icon.svg"
 export {default as Ellipsis} from "./ellipsis.svg"
+export {default as SimpleEditIcon} from "./simple-edit-icon.svg"
+export {default as DeleteIcon} from "./delete-icon.svg"
+export {default as CloseIcon} from "./close.svg"

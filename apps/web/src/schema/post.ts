@@ -3,6 +3,7 @@ import { Transform } from "class-transformer";
 import { IsInstance, IsNotEmpty } from "class-validator";
 import { OmitType } from "nestjs-mapped-types";
 
+
 export class CreatePostWebDto extends OmitType(PostEntity, [
   "author_id",
   "updated_at",
