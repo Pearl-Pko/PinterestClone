@@ -1,0 +1,20 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Launch Chrome and Attach",
+            "type": "msedge",
+            "request": "launch",
+            "url": "http://localhost:3000", // Your app's start URL
+            "webRoot": "${workspaceFolder}/apps/web", // Root of your project
+            "sourceMaps": true,
+            "sourceMapPathOverrides": {
+                "webpack://_N_E/*": "${webRoot}/*",
+                "/turbopack/[project]/*": "${webRoot}/*"
+            },
+            "trace": true,
+            "preLaunchTask": "run web",
+            "skipFiles": ["**/<node_internals>/**", "**/node_modules/**"]
+        }
+    ]
+}

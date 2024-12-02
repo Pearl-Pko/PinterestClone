@@ -13,6 +13,5 @@ export class CreatePostWebDto extends OmitType(PostEntity, [
   "expiresAt",
   "status",
 ]) {
-  @IsNotEmpty()
   content: FileList;
 }

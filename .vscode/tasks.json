@@ -1,0 +1,12 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"type": "shell",
+			"command": "pnpm",
+            "args": ["--filter", "web", "dev"],
+			"problemMatcher": [],
+			"label": "run web",
+		},
+	]
+}

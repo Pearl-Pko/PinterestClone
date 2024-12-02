@@ -15,10 +15,12 @@ import { FormProvider, useForm } from "react-hook-form";
 import { CreatePostWebDto } from "@web/src/schema/post";
 import { classValidatorResolver } from "@hookform/resolvers/class-validator";
 import Button from "@web/src/components/common/Button";
-import { BatchEditPosts } from "@schema/post";
+import { BatchEditPosts, PostEntity } from "@schema/post";
 import { differenceInCalendarISOWeekYears } from "date-fns";
 import { useBatchEditPosts } from "@web/src/service/usePosts";
 import { useQueryClient } from "@tanstack/react-query";
+import { AxiosResponse } from "axios";
+import { PaginatedResponse } from "@schema/util";
 
 export default function BatchEdit({
   selectedPosts,
@@ -33,7 +35,6 @@ export default function BatchEdit({
 }) {
   const [isOpen, setIsOpen] = useState(open);
   const queryClient = useQueryClient();
-
   const form = useForm<BatchEditPosts>({
     resolver: classValidatorResolver(BatchEditPosts, {
       transformer: {
@@ -51,7 +52,8 @@ export default function BatchEdit({
 
   const onSubmit = async (data: BatchEditPosts) => {
     try {
-      await useBatchEditPosts({...data, postIds: selectedPosts});
+      await useBatchEditPosts({ ...data, postIds: selectedPosts });
+      console.log("invalidate current post", currentPost);
       queryClient.invalidateQueries({ queryKey: ["post", currentPost] });
       queryClient.invalidateQueries({ queryKey: ["getAllPosts", "draft"] });
       setIsOpen(false);
@@ -67,8 +69,37 @@ export default function BatchEdit({
 
   useEffect(() => {
     form.reset();
-  }, [isOpen])
-  
+    const fields: (keyof Omit<BatchEditPosts, "postIds">)[] = [
+      "description",
+      "external_link",
+      "tags",
+      "title",
+    ];
+    const data = queryClient
+      .getQueryData<
+        AxiosResponse<PaginatedResponse<PostEntity>>
+      >(["getAllPosts", "draft"])
+      ?.data.data.filter((post) => selectedPosts.includes(post.id));
+
+    const refItem = data?.[0];
+
+    if (!refItem) return;
+
+    for (const field of fields) {
+      const same = data.every((value) => value[field] === refItem[field]);
+      console.log("field", field, same, refItem[field]);
+      if (same) {
+        form.setValue(field, refItem[field], {shouldDirty: false});
+      } else {
+        console.log("error", field);
+        form.setError(field, {
+          message: `Your selected Pin have existing ${field}s. Editing this field would overwrite previous entries for the selected Pins`,
+          type: "alert"
+        });
+      }
+    }
+  }, [isOpen]);
+
   return (
     <FormProvider {...form}>
       <Sheet open={isOpen} onOpenChange={onOpenChange}>
@@ -76,7 +107,10 @@ export default function BatchEdit({
           className="h-full flex flex-col w-2/5 py-8 px-0"
           side="right"
         >
-          <form onSubmit={form.handleSubmit(onSubmit)} className="h-full flex flex-col">
+          <form
+            onSubmit={form.handleSubmit(onSubmit)}
+            className="h-full flex flex-col"
+          >
             <SheetHeader className="flex flex-row justify-between w-full px-6">
               <SheetTitle className="text-2xl">
                 Edit Pins ({selectedPosts.length})
@@ -92,7 +126,7 @@ export default function BatchEdit({
               </div>
             </div>
             <SheetFooter className="px-6">
-              <Button text="Update" disabled={!form.formState.isDirty}/>
+              <Button text="Update" disabled={!form.formState.isDirty} />
             </SheetFooter>
           </form>
         </SheetContent>

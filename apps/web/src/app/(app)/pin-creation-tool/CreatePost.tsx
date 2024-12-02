@@ -31,9 +31,11 @@ import { cn } from "@web/src/lib/utils";
 export default function CreatePost({
   selectedPostId,
   onPublish,
+  batchOperation,
 }: {
   selectedPostId: string;
   onPublish: () => void;
+  batchOperation: boolean;
 }) {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [postId, setPostId] = useState("");
@@ -58,6 +60,8 @@ export default function CreatePost({
       queryClient.getQueryState(["getAllPosts", "draft"])?.dataUpdatedAt,
   });
 
+  console.log(["post", postId]);
+
   const form = useForm<CreatePostWebDto>({
     resolver: classValidatorResolver(CreatePostWebDto, {
       transformer: {
@@ -72,6 +76,12 @@ export default function CreatePost({
     }),
     defaultValues: data,
     mode: "onChange",
+    //  errors: {
+    //   content: {
+    //     message: "Image must be specified",
+    //     type: ""
+    //   }
+    //  }
   });
 
   const invalidatePosts = () => {
@@ -114,14 +124,20 @@ export default function CreatePost({
 
     if (title) formData.append("title", title);
 
-    console.log("form data", formData);
+    console.log("form data", formData, content);
     return formData;
   };
 
   const onFormChange = async () => {
     console.log("a");
-    // await trigger("content")
     const formData = getFormData();
+
+    console.log(
+      "form valid",
+      form.formState.isValid,
+      form.formState.isValidating,
+      form.formState.errors,
+    );
 
     if (!form.formState.isValid) return;
 
@@ -138,7 +154,7 @@ export default function CreatePost({
       if (postId) {
         await usePublishPost(postId);
         resetForm();
-        invalidatePosts();          
+        invalidatePosts();
         onPublish();
       }
     } catch (error) {
@@ -150,7 +166,7 @@ export default function CreatePost({
     }
   };
 
-  const handleFileInputChange = (file: FileList) => {
+  const handleFileInputChange = async (file: FileList) => {
     const image = file?.[0];
     if (image) {
       const url = URL.createObjectURL(image);
@@ -158,8 +174,8 @@ export default function CreatePost({
         URL.revokeObjectURL(previewUrl);
       }
       setPreviewUrl(url);
-    } else {
-      form.setError("content", { message: "Image must be specified" });
+      form.clearErrors("content");
+      await form.trigger("content");
     }
   };
 
@@ -187,40 +203,46 @@ export default function CreatePost({
   useEffect(() => {
     console.log("yeah");
     form.setError("content", { message: "Image must be specified" });
-  }, []);
+  }, [form.trigger]);
 
-  const file = form.watch("content");
+  // useEffect(() => {
+  //   form.reset(data);
+  // }, [data])
+  console.log(form.formState.errors.content?.message);
 
-  useEffect(() => {
+  const validatefile = (file: FileList | null): boolean => {
     if (file?.length) {
-      form.clearErrors("content");
-      handleFileInputChange(file);
+      console.log("happended later");
+      return true;
     } else {
       form.setError("content", { message: "Image must be specified" });
+      return false;
     }
-  }, [file]);
+  };
 
   useEffect(() => {
     // if (selectedPostId) {
-
-    console.log("selected post id", selectedPostId);
-    resetForm();
     setPostId(selectedPostId);
-    // }
+    if (selectedPostId) return;
+
+    resetForm();
   }, [selectedPostId]);
 
   useEffect(() => {
-    if (!initialData) return;
-    form.reset(initialData);
-    if (initialData?.content_uri) setPreviewUrl(initialData.content_uri);
-  }, [initialData]);
+    if (!data) return;
+    console.log("cause");
+    form.reset(data);
+    form.clearErrors();
+    if (data?.content_uri) setPreviewUrl(data.content_uri);
+  }, [data]);
 
   return (
     <FormProvider {...form}>
       <form
         className={clsx(
           "flex-1 border-l-2 h-full w-full flex flex-col",
-          form.formState.isSubmitting && "opacity-35 pointer-events-none",
+          (form.formState.isSubmitting || batchOperation) &&
+            "opacity-35 pointer-events-none",
         )}
         onSubmit={form.handleSubmit(onSubmit)}
         onChange={(event) => {
@@ -288,7 +310,14 @@ export default function CreatePost({
                     accept="image/*"
                     type="file"
                     className="w-0 h-0"
-                    onChange={(e) => onChange(e.target.files)}
+                    onChange={async (e) => {
+                      const files = e.target.files;
+                      const validFile = validatefile(files);
+                      if (validFile && files) {
+                        onChange(files);
+                        await handleFileInputChange(files);
+                      }
+                    }}
                   />
                 );
               }}

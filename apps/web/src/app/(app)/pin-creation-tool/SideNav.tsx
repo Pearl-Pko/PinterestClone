@@ -38,20 +38,23 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@web/src/components/ui/dialog";
+import { cn } from "@web/src/lib/utils";
 
 export default function SideNav({
   onSelectPost,
   selectedPostId,
+  onBatchOperation,
 }: {
   onSelectPost: (postId: string) => void;
   selectedPostId: string;
+  onBatchOperation: (batchOperation: boolean) => void;
 }) {
   const [open, setOpen] = useState(true);
 
   const [batchPostDrawerOpen, setBatchPostDrawerOpen] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [singleItemDelete, setSingleItemDelete] = useState<string>("");
-  const [selectAllCheckbox, setSelectAllCheckBox] = useState<boolean>(false);
+  const [batchOperation, setBatchOperation] = useState<boolean>(false);
 
   const { data } = useQuery({
     queryKey: ["getAllPosts", "draft"],
@@ -103,12 +106,14 @@ export default function SideNav({
   const drafts = data?.data.data;
 
   useEffect(() => {
-    if (checkedPosts.length > 0) setSelectAllCheckBox(true);
-    else setSelectAllCheckBox(false)
+    if (checkedPosts.length > 0) {
+      setBatchOperation(true);
+      onBatchOperation(true);
+    } else {
+      setBatchOperation(false);
+      onBatchOperation(false);
+    }
   }, [checkedPosts]);
-
-  // console.log("drafts", drafts);
-  console.log("checked posts", checkedPosts);
 
   return (
     <div
@@ -147,14 +152,17 @@ export default function SideNav({
               </div>
               <Icon
                 icon={<CloseSideNavIcon />}
-                className="p-3"
+                className={cn("p-3", batchOperation && "opacity-35 pointer-events-none")}
                 onClick={() => {
                   setOpen(false);
                 }}
               />
             </div>
             <button
-              className="w-full py-2 font-semibold bg-gray-200 rounded-full"
+              className={cn(
+                "w-full py-2 font-semibold bg-gray-200 rounded-full",
+                batchOperation && "opacity-35 pointer-events-none",
+              )}
               onClick={() => onSelectPost("")}
             >
               Create new
@@ -233,14 +241,12 @@ export default function SideNav({
             <div className="flex flex-row items-center gap-2">
               <Checkbox
                 className="w-5 h-5"
-                checked={selectAllCheckbox}
+                checked={batchOperation}
                 onCheckedChange={(checked) => {
                   if (checked) {
                     setCheckedPosts(drafts?.map((item) => item.id) || []);
-                    setSelectAllCheckBox(true);
                   } else {
                     setCheckedPosts([]);
-                    setSelectAllCheckBox(false);
                   }
                 }}
               />

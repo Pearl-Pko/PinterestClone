@@ -1,4 +1,5 @@
 import { ErrorIcon } from "@web/public";
+import ErrorInputField from "@web/src/components/common/ErrorInputField";
 import { cn } from "@web/src/lib/utils";
 import { CreatePostWebDto } from "@web/src/schema/post";
 import React from "react";
@@ -9,6 +10,7 @@ export default function PostForm() {
     register,
     formState: { errors },
   } = useFormContext<CreatePostWebDto>();
+
   return (
     <>
       <div>
@@ -20,6 +22,9 @@ export default function PostForm() {
           placeholder="Add a title"
           className="mt-1 focus:outline-none border-2 rounded-2xl px-3 py-2 w-full"
         />
+        {errors.title?.message && (
+         <ErrorInputField message={errors.title.message} type={errors.title.type}/>
+        )}
       </div>
       <div>
         <p>Description</p>
@@ -30,6 +35,9 @@ export default function PostForm() {
           placeholder="Add a detailed description"
           className="mt-1 h-28 focus:outline-none border-2 rounded-2xl px-3 py-2 w-full resize-none"
         />
+        {errors.description?.message && (
+         <ErrorInputField message={errors.description.message} type={errors.description.type}/>
+        )}
       </div>
       <div>
         <p>Link</p>
@@ -40,11 +48,8 @@ export default function PostForm() {
           placeholder="Add a link"
           className="mt-1 focus:outline-none border-2 rounded-2xl px-3 py-2 w-full"
         />
-        {errors.external_link && (
-          <div className="flex gap-2 items-center">
-            <ErrorIcon fill="#E60023" />
-            <p className="text-red-700">{errors.external_link.message}</p>
-          </div>
+       {errors.external_link?.message && (
+         <ErrorInputField message={errors.external_link.message} type={errors.external_link.type}/>
         )}
       </div>
       <div>
@@ -53,6 +58,12 @@ export default function PostForm() {
           placeholder="Choose a board"
           className="mt-1 focus:outline-none border-2 rounded-2xl px-3 py-2 w-full"
         />
+        {/* {errors.external_link && (
+          <div className="flex gap-2 items-center">
+            <ErrorIcon fill="#E60023" />
+            <p className="text-red-700">{errors.external_link.message}</p>
+          </div>
+        )} */}
       </div>
       <div>
         <p>Tags</p>
