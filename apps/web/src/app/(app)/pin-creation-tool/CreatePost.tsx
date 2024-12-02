@@ -94,6 +94,7 @@ export default function CreatePost({
     onSuccess: (data) => {
       setPostId(data.data.id);
       invalidatePosts();
+      // queryClient.invalidateQueries({ queryKey: ["getAllPosts", "draft"] });
     },
     onError: (error) => {
       console.error(error);
@@ -112,19 +113,20 @@ export default function CreatePost({
     const { content, description, external_link, tags, title } =
       form.getValues();
 
-    if (content?.[0]) {
+    if (content?.[0] || form.formState.dirtyFields.content) {
       formData.append("content", content?.[0]);
     }
 
-    if (description) formData.append("description", description || "");
+    if (form.formState.dirtyFields.description)
+      formData.append("description", description || "");
 
-    if (external_link) formData.append("external_link", external_link);
+    if (form.formState.dirtyFields.external_link)
+      formData.append("external_link", external_link || "");
 
-    if (tags) formData.append("tags", tags);
+    if (form.formState.dirtyFields.tags) formData.append("tags", tags || "");
 
-    if (title) formData.append("title", title);
+    if (form.formState.dirtyFields.title) formData.append("title", title || "");
 
-    console.log("form data", formData, content);
     return formData;
   };
 
@@ -141,10 +143,15 @@ export default function CreatePost({
 
     if (!form.formState.isValid) return;
 
+    if (createPostMutation.isPending) return;
+
     if (!postId) {
       // console.log("form", formData);
       createPostMutation.mutate(formData);
-    } else updatePostMutation.mutate({ id: postId, data: formData });
+    } else {
+      console.log("dirty", form.formState.dirtyFields);
+      updatePostMutation.mutate({ id: postId, data: formData });
+    }
   };
 
   const debounceFormChange = debounce(() => onFormChange(), 500);
@@ -212,7 +219,6 @@ export default function CreatePost({
 
   const validatefile = (file: FileList | null): boolean => {
     if (file?.length) {
-      console.log("happended later");
       return true;
     } else {
       form.setError("content", { message: "Image must be specified" });
