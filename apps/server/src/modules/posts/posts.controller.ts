@@ -24,7 +24,7 @@ import { AccessTokenDTO } from '@schema/auth';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { FormDataRequest, MemoryStoredFile } from 'nestjs-form-data';
 import { ApiResponse, PaginatedQuery, PaginatedResponse } from '@schema/util';
-import { CreatePostDto, UpdatePostDto } from './dto';
+import { CreatePostDto, UpdatePostDto } from './dto/post.dto';
 @Controller('posts')
 export class PostsController {
     constructor(private readonly postsService: PostsService) {}

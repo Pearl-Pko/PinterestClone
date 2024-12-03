@@ -1,8 +1,6 @@
 import "reflect-metadata";
 import React, { FormEventHandler, useEffect, useMemo, useState } from "react";
 import { Controller, FormProvider, useForm, useWatch } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import api from "@web/src/utils/api";
 import Button from "@web/src/components/common/Button";
 import { classValidatorResolver } from "@hookform/resolvers/class-validator";
 import { debounce } from "lodash";
@@ -15,9 +13,6 @@ import {
 import { AxiosError, AxiosResponse } from "axios";
 import {
   EditIcon,
-  ErrorIcon,
-  OpenSideNavIcon,
-  ResetPinIcon,
   UploadIcon,
 } from "@web/public";
 import { CreatePostWebDto } from "@web/src/schema/post";

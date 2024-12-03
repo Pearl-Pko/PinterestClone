@@ -55,14 +55,18 @@ model Session {
 }
 
 model Board {
-  id         String   @id @default(uuid())
-  name       String
-  private    Boolean  @default(false)
-  user       User     @relation(fields: [user_id], references: [id])
-  user_id    String
-  Pin        Pin[]
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
+  id          String    @id @default(uuid())
+  name        String
+  description String?
+  deletedAt   DateTime?
+  banner      Pin?      @relation("BoardBanner", fields: [banner_id], references: [id])
+  banner_id   String?   @unique
+  private     Boolean   @default(false)
+  user        User      @relation(fields: [user_id], references: [id])
+  user_id     String
+  Pins        Pin[]     @relation("BoardPins")
+  created_at  DateTime  @default(now())
+  updated_at  DateTime  @updatedAt
 }
 
 model Post {
@@ -82,15 +86,17 @@ model Post {
 }
 
 model Pin {
-  id         String   @id @default(uuid())
-  user       User     @relation(fields: [user_id], references: [id])
-  user_id    String
-  post       Post     @relation(fields: [post_id], references: [id])
-  post_id    String
-  board      Board?   @relation(fields: [board_id], references: [id])
-  board_id   String?
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
+  id           String   @id @default(uuid())
+  user         User     @relation(fields: [user_id], references: [id])
+  user_id      String
+  post         Post     @relation(fields: [post_id], references: [id])
+  post_id      String
+  board        Board    @relation("BoardPins", fields: [board_id], references: [id])
+  board_id     String
+  banner_board Board?   @relation("BoardBanner")
+  private_note String?  @db.VarChar(500)
+  created_at   DateTime @default(now())
+  updated_at   DateTime @updatedAt
 }
 
 enum Gender {

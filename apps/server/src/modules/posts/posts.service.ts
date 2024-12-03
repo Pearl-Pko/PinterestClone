@@ -12,7 +12,7 @@ import { PostStatus, Prisma } from '@prisma/client';
 import { S3Service } from '../s3/s3.service';
 import { addDays } from 'date-fns';
 import { Cron, CronExpression } from '@nestjs/schedule';
-import { CreatePostDto, UpdatePostDto } from './dto';
+import { CreatePostDto, UpdatePostDto } from './dto/post.dto';
 import { PaginatedQuery } from '@schema/util';
 import { DescribeJobCommand } from '@aws-sdk/client-s3-control';
 @Injectable()
