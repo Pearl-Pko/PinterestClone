@@ -13,6 +13,7 @@ import { ConfigService } from '@nestjs/config';
 import { User } from '@prisma/client';
 import { v4 as uuidv4 } from 'uuid';
 import {
+    PasswordRequiredException,
     UserAlreadyExists,
     UserWithEmailNotFoundException,
 } from '@server/common/exceptions/exceptions';
@@ -26,9 +27,20 @@ import {
 // import { ChangePassword, ResetPasswordDto } from './dto/dto';
 import { DatabaseService } from '../database/database.service';
 import { createHmac, randomBytes } from 'crypto';
-import { ChangePassword, CreateUserDto, ResetPasswordDto, UserEntity } from '@schema/user';
-import { AccessTokenDTO , AccessTokenClaims, RefreshTokenDto} from '@schema/auth';
+import {
+    ChangePassword,
+    CreateUserDto,
+    ResetPasswordDto,
+    UserEntity,
+} from '@schema/user';
+import {
+    AccessTokenDTO,
+    AccessTokenClaims,
+    RefreshTokenDto,
+} from '@schema/auth';
 import { plainToInstance } from 'class-transformer';
+import { GoogleProfile } from './strategy/google.strategy';
+import { convertTextToSlug } from '@server/utils/format';
 
 @Injectable()
 export class AuthService {
@@ -47,6 +59,10 @@ export class AuthService {
 
         if (!user) {
             throw new UserWithEmailNotFoundException(userDto.email);
+        }
+
+        if (!user.password) {
+            throw new PasswordRequiredException();
         }
 
         const passwordMatch = await this.compareHash(
@@ -77,6 +93,49 @@ export class AuthService {
         });
 
         return await this.createUserSession(newUser);
+    }
+
+    async handleProviderLogin(user: GoogleProfile): Promise<Tokens> {
+        const account = await this.databaseService.account.findUnique({
+            where: {
+                provider_providerId: {
+                    provider: user.provider,
+                    providerId: user.id,
+                },
+            },
+            include: {
+                user: true,
+            },
+        });
+
+        if (account) return await this.createUserSession(account.user);
+
+        const email = user.emails[0].value
+
+        let existingUser = await this.databaseService.user.findUnique({
+            where: {
+                email: email,
+            },
+        });
+
+        if (!existingUser) {
+            existingUser = await this.databaseService.user.create({
+                data: {
+                    username:  convertTextToSlug(email.split("@")[0])
+                }
+            })
+        }
+        
+        // automatic account merging for google provider
+        await this.databaseService.account.create({
+            data: {
+                provider: user.provider, 
+                providerId: user.id,
+                user_id: existingUser.id
+            }
+        })
+
+        return await this.createUserSession(existingUser);
     }
 
     async createUserSession(user: User): Promise<Tokens> {
@@ -110,7 +169,9 @@ export class AuthService {
         const hashPassword = await this.hashData(password);
 
         if (user && user.password === hashPassword) {
-            return plainToInstance(AccessTokenClaims, user, {strategy: 'excludeAll'});
+            return plainToInstance(AccessTokenClaims, user, {
+                strategy: 'excludeAll',
+            });
         }
         return null;
     }
@@ -124,7 +185,7 @@ export class AuthService {
         return bcrypt.compare(plainText, hash);
     }
 
-    async getTokens(userId: string, user: UserEntity, token_id: string) {
+    async getTokens(userId: string, user: User, token_id: string) {
         const [accessToken, refreshToken] = await Promise.all([
             this.generateAccessToken(user),
             this.generateRefreshToken(user, token_id),
@@ -132,11 +193,13 @@ export class AuthService {
         return { accessToken, refreshToken };
     }
 
-    async generateAccessToken(user: UserEntity) {
+    async generateAccessToken(user: User) {
         return this.jwtService.signAsync(
             {
                 sub: user.id,
-                ...plainToInstance(AccessTokenClaims, user, {strategy: 'excludeAll'}),
+                ...plainToInstance(AccessTokenClaims, user, {
+                    strategy: 'excludeAll',
+                }),
             } as AccessTokenDTO,
             {
                 secret: this.configService.get<string>('JWT_ACCESS_SECRET'),
@@ -147,7 +210,7 @@ export class AuthService {
         );
     }
 
-    async generateRefreshToken(user: UserEntity, token_id: string) {
+    async generateRefreshToken(user: User, token_id: string) {
         return this.jwtService.signAsync(
             {
                 sub: user.id,
@@ -185,12 +248,16 @@ export class AuthService {
             throw new UserWithEmailNotFoundException(userToken.email);
         }
 
+
+        if (!user.password) {
+            throw new PasswordRequiredException();
+        }
+
         const passwordMatch = await this.compareHash(
             password.oldPassword,
             user.password,
         );
 
-    
         if (!passwordMatch) {
             console.log('not match');
             throw new HttpException('Incorrect password', HttpStatus.FORBIDDEN);
@@ -246,8 +313,8 @@ export class AuthService {
     async resetPassword(resetPasswordDto: ResetPasswordDto) {
         const hashedResetToken = this.generateHMac(resetPasswordDto.token);
         const user =
-        await this.usersService.findUserByResetToken(hashedResetToken);
-        
+            await this.usersService.findUserByResetToken(hashedResetToken);
+
         if (!user) {
             throw new UnauthorizedException('Invalid or expired token');
         }

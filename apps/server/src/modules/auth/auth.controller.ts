@@ -13,6 +13,7 @@ import {
     HttpException,
     Res,
     UseInterceptors,
+    Req,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { AuthGuard } from '@nestjs/passport';
@@ -25,8 +26,15 @@ import { RefreshToken } from '@server/types/auth';
 import { MailService } from '../mail/mail.service';
 import { AddSessionInterceptor } from '@server/interceptors/add-session-interceptor';
 import { RemoveSessionInterceptor } from '@server/interceptors/delete-session-interceptor';
-import {ChangePassword, CreateUserDto, ForgotPasswordDto, ResetPasswordDto} from "@schema/user"
+import {
+    ChangePassword,
+    CreateUserDto,
+    ForgotPasswordDto,
+    ResetPasswordDto,
+} from '@schema/user';
 import { AccessTokenDTO } from '@schema/auth';
+import { GoogleOauthGuard } from './guards/google-oauth.guard';
+import { GoogleProfile } from './strategy/google.strategy';
 @Controller('user')
 export class AuthController {
     constructor(
@@ -47,7 +55,7 @@ export class AuthController {
     @UseInterceptors(AddSessionInterceptor)
     @Post('signup')
     async signup(@Body() createUserDto: CreateUserDto) {
-       return await this.authService.signUp(createUserDto);
+        return await this.authService.signUp(createUserDto);
     }
 
     @Public()
@@ -66,10 +74,22 @@ export class AuthController {
     @Post('logout')
     async logout(@User<RefreshToken>() token: RefreshToken) {
         if (await this.authService.logout(token)) {
-            
             return { status: 'success', message: 'Successfully logged out' };
         }
         throw new HttpException('Failed to log out', HttpStatus.NOT_FOUND);
+    }
+
+    @Public()
+    @Get('google')
+    @UseGuards(GoogleOauthGuard)
+    async googleAuth() {}
+
+    @Public()
+    @Get('google/callback')
+    @UseGuards(AuthGuard('google'))
+    async googleAuthRedirect(@User<GoogleProfile>() user: GoogleProfile) {
+        return await this.authService.handleProviderLogin(user);
+
     }
 
     @Post('change-password')

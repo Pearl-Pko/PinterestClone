@@ -55,3 +55,10 @@ export class SessionNotFoundException extends HttpException {
         )
     }
 }
+
+
+export class PasswordRequiredException extends HttpException {
+    constructor() {
+        super("Your account does not have a password set up. Please set up a password to continue", HttpStatus.NOT_FOUND)
+    }
+}

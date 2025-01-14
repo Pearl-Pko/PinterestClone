@@ -8,7 +8,8 @@ export class UserEntity implements User {
     id: string;
 
     @IsEmail() 
-    email: string;
+    @IsOptional()
+    email: string | null;
 
     @IsNotEmpty()
     username: string;
@@ -26,7 +27,8 @@ export class UserEntity implements User {
     website: string | null;
 
     @IsNotEmpty()
-    password: string;
+    @IsOptional()
+    password: string | null;
 
     @IsOptional()
     date_of_birth: Date | null;
@@ -83,7 +85,10 @@ type a = Partial<UserEntity>
 
 
 
-export class CreateUserDto extends PickType(UserEntity, ["email", "password"] as const) implements Omit<Prisma.UserCreateInput, 'username'> {}
+export class CreateUserDto extends PickType(UserEntity, ["email", "password"] as const) implements Omit<Prisma.UserCreateInput, 'username'> {
+    email: string;
+    password: string;
+}
 
 export class LoginUserDto extends PickType(UserEntity, ["email", "password"] as const) implements Omit<Prisma.UserCreateInput, 'username'> {}
 

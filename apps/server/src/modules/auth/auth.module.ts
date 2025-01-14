@@ -12,6 +12,7 @@ import { AccessTokenStrategy } from './strategy/jwt.strategy';
 import { RefreshTokenStrategy } from './strategy/refresh.strategy';
 import { SessionModule } from '../session/session.module';
 import { MailModule } from '../mail/mail.module';
+import { GoogleStrategy } from './strategy/google.strategy';
 
 @Module({
     imports: [
@@ -37,7 +38,8 @@ import { MailModule } from '../mail/mail.module';
         ConfigService,
         LocalStrategy,
         AccessTokenStrategy,
-        RefreshTokenStrategy
+        RefreshTokenStrategy, 
+        GoogleStrategy
     ],
 })
 export class AuthModule {}
