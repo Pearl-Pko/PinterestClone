@@ -17,7 +17,6 @@ import { GoogleStrategy } from './strategy/google.strategy';
 @Module({
     imports: [
         UsersModule,
-        PassportModule,
         SessionModule,
         MailModule,
         JwtModule.registerAsync({

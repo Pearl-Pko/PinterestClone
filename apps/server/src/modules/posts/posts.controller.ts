@@ -51,7 +51,7 @@ export class PostsController {
         );
         return {
             message: `Successfully edited ${payload.count} out of ${posts.postIds.length} posts`,
-            status: true,
+            status: "success",
         };
     }
 
@@ -67,7 +67,7 @@ export class PostsController {
 
         return {
             message: `Successfully published ${count} out of ${posts.postIds.length} posts`,
-            status: true,
+            status: "success",
         };
     }
 
@@ -83,7 +83,7 @@ export class PostsController {
 
         return {
             message: `Successfully deleted ${count.count} out of ${posts.postIds.length} posts`,
-            status: true,
+            status: "success",
         };
     }
 

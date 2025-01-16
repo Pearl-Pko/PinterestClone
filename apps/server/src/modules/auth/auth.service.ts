@@ -1,5 +1,6 @@
 import {
     BadRequestException,
+    ConflictException,
     ForbiddenException,
     HttpException,
     HttpStatus,
@@ -110,7 +111,7 @@ export class AuthService {
 
         if (account) return await this.createUserSession(account.user);
 
-        const email = user.emails[0].value
+        const email = user.emails[0].value;
 
         let existingUser = await this.databaseService.user.findUnique({
             where: {
@@ -121,25 +122,63 @@ export class AuthService {
         if (!existingUser) {
             existingUser = await this.databaseService.user.create({
                 data: {
-                    username:  convertTextToSlug(email.split("@")[0])
-                }
-            })
+                    username: convertTextToSlug(email.split('@')[0]),
+                },
+            });
         }
-        
+
         // automatic account merging for google provider
         await this.databaseService.account.create({
             data: {
-                provider: user.provider, 
+                provider: user.provider,
                 providerId: user.id,
-                user_id: existingUser.id
-            }
-        })
+                user_id: existingUser.id,
+            },
+        });
 
         return await this.createUserSession(existingUser);
     }
 
+    async handleProviderLink(userId: string, user: GoogleProfile) {
+        const account = await this.databaseService.account.findUnique({
+            where: {
+                provider_providerId: {
+                    provider: user.provider,
+                    providerId: user.id,
+                },
+            },
+            include: {
+                user: true,
+            },
+        });
+
+        if (account) {
+            if (account.user_id === userId) {
+                throw new ConflictException(
+                    'This provider has already been linked to this account',
+                );
+            }
+            else {
+                throw new ConflictException(
+                    'This provider is linked to another account',
+                );
+            }
+        }
+
+        await this.databaseService.account.create({
+            data: {
+                provider: user.provider,
+                providerId: user.id,
+                user_id: userId,
+            },
+        });
+
+        return true;
+    }
+
     async createUserSession(user: User): Promise<Tokens> {
         const token_id = uuidv4();
+
         const { accessToken, refreshToken } = await this.getTokens(
             user.id,
             user,
@@ -247,7 +286,6 @@ export class AuthService {
         if (!user) {
             throw new UserWithEmailNotFoundException(userToken.email);
         }
-
 
         if (!user.password) {
             throw new PasswordRequiredException();

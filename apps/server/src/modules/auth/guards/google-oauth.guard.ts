@@ -1,6 +1,35 @@
+import { ExecutionContext, Injectable } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import { AuthGuard, IAuthModuleOptions } from '@nestjs/passport';
+import { AccessTokenDTO } from '@schema/auth';
 
-import { Injectable } from '@nestjs/common';
-import { AuthGuard } from '@nestjs/passport';
+export type OAuthState = {
+    userId?: string;
+    source: "link" | "signin"
+}
 
 @Injectable()
-export class GoogleOauthGuard extends AuthGuard('google') {}
+export class GoogleOauthGuard extends AuthGuard('google') {
+    constructor(private configService: ConfigService) {
+        super();
+    }
+
+    getAuthenticateOptions(
+        context: ExecutionContext,
+    ): IAuthModuleOptions | undefined {
+        const request = context.switchToHttp().getRequest();
+        const user = request?.user as Partial<AccessTokenDTO>;
+        const state = JSON.stringify({
+            userId: user?.sub,
+            source:
+                request.path === '/user/google'
+                    ? 'signin'
+                    : request.path === '/user/google/link'
+                      ? 'link'
+                      : '',
+        } as OAuthState);
+        return {
+            state: Buffer.from(state).toString("base64url"),
+        };
+    }
+}

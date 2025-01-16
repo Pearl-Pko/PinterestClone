@@ -14,6 +14,8 @@ import {
     Res,
     UseInterceptors,
     Req,
+    Query,
+    BadRequestException,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { AuthGuard } from '@nestjs/passport';
@@ -33,8 +35,9 @@ import {
     ResetPasswordDto,
 } from '@schema/user';
 import { AccessTokenDTO } from '@schema/auth';
-import { GoogleOauthGuard } from './guards/google-oauth.guard';
+import { GoogleOauthGuard, OAuthState } from './guards/google-oauth.guard';
 import { GoogleProfile } from './strategy/google.strategy';
+import { UserWithIdNotFoundException } from '@server/common/exceptions/exceptions';
 @Controller('user')
 export class AuthController {
     constructor(
@@ -87,9 +90,45 @@ export class AuthController {
     @Public()
     @Get('google/callback')
     @UseGuards(AuthGuard('google'))
-    async googleAuthRedirect(@User<GoogleProfile>() user: GoogleProfile) {
-        return await this.authService.handleProviderLogin(user);
+    async googleAuthRedirect(
+        @User<GoogleProfile>() user: GoogleProfile,
+        @Query('state') state: string,
+    ) {
+        const oauthState = JSON.parse(
+            Buffer.from(state, 'base64').toString('utf8'),
+        ) as OAuthState;
 
+        if (oauthState.source === 'signin') {
+            return await this.authService.handleProviderLogin(user);
+        } else {
+            if (!oauthState.userId) {
+                throw new BadRequestException('User Id not found');
+            }
+
+            console.log('real', oauthState.userId);
+
+            const linkSuccessful = await this.authService.handleProviderLink(
+                oauthState.userId,
+                user,
+            );
+            return {
+                status: linkSuccessful ? 'sucess' : 'failed',
+                message:
+                    'This provider has successfully been linked to this account',
+            };
+        }
+    }
+
+    @Get('google/link')
+    @UseGuards(GoogleOauthGuard)
+    async googleAuthLink() {}
+
+    @Public()
+    @Get('google/link/callback')
+    @UseGuards(AuthGuard('google'))
+    async googleAuthLinkRedirect(@User<GoogleProfile>() user: GoogleProfile) {
+        console.log('link callback');
+        // return await this.authService.handleProviderLogin(user);
     }
 
     @Post('change-password')

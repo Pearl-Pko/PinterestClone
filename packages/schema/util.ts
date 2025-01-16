@@ -25,7 +25,7 @@ export class PaginatedResponse<T> {
 }
 
 export class ApiResponse<T = void> {
-    status: boolean;
+    status: "pending" | "success" | "failed";
     message: string;
     data?: T 
 }
