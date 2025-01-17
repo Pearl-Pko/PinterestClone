@@ -12,6 +12,10 @@ import { Tokens } from '@server/types/auth';
 import { JwtService } from '@nestjs/jwt';
 import { AccessTokenDTO, RefreshTokenDto } from '@schema/auth';
 
+export type Session = {
+    redirect?: boolean
+} & Tokens;
+
 @Injectable()
 export class AddSessionInterceptor implements NestInterceptor {
     constructor(private readonly jwtService: JwtService) {}
@@ -22,7 +26,7 @@ export class AddSessionInterceptor implements NestInterceptor {
         const request: Request = ctx.getRequest<Request>();
 
         return next.handle().pipe(
-            tap((data: Tokens) => {
+            tap((data: Session) => {
                 if (!data) return;
 
                 const { access_token, refresh_token } = data;
@@ -47,6 +51,10 @@ export class AddSessionInterceptor implements NestInterceptor {
                         // secure: true
                         expires: new Date(decodedRefreshToken.exp * 1000)
                     });
+                }
+
+                if (data.redirect) {
+                    response.redirect("http://localhost:3000/callback")
                 }
             }),
         );

@@ -1,7 +1,11 @@
 "use client";
 import { classValidatorResolver } from "@hookform/resolvers/class-validator";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { PasswordEyeIcon, PasswordHiddenEyeIcon } from "@web/public";
+import {
+  GoogleIcon,
+  PasswordEyeIcon,
+  PasswordHiddenEyeIcon,
+} from "@web/public";
 import ErrorInputField from "@web/src/components/common/ErrorInputField";
 import Button from "@web/src/components/common/Button";
 import { CreateUserDtoWithConfirmation } from "@web/src/schema/user";
@@ -11,6 +15,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
+import { CallbackMessage } from "../callback/page";
 
 export default function page() {
   const router = useRouter();
@@ -23,8 +28,8 @@ export default function page() {
     resolver: classValidatorResolver(CreateUserDtoWithConfirmation),
   });
   const [showPassword, setShowPassword] = useState<boolean>(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState<boolean>(false);
-
+  const [showConfirmPassword, setShowConfirmPassword] =
+    useState<boolean>(false);
 
   // useEffect(() => {
   //   setError("root", {message: "wrong"})
@@ -44,6 +49,29 @@ export default function page() {
       console.error(error);
     }
   };
+
+  const handleGoogleLogin = async () => {
+    window.open("/api/user/google", "_blank", "width=500,height=600");
+  };
+
+  useEffect(() => {
+    const handleMessage = (event: MessageEvent<CallbackMessage>) => {
+      if (event.origin !== "http://localhost:3000") return;
+
+      if (event.data.source !== "auth") return;
+
+      console.log("el", event.data);
+
+      console.log("event received");
+      if (!event.data.error) router.push("/");
+      // router.replace("/");
+      // window.location.reload();
+    };
+
+    window.addEventListener("message", handleMessage);
+
+    return () => window.removeEventListener("message", handleMessage);
+  }, [router]);
 
   console.log("yes", errors);
   return (
@@ -126,6 +154,16 @@ export default function page() {
             // disabled={!isValid}
             // loading={isSubmitting}
           />
+          <p className="text-center font-medium my-2">OR</p>
+          <button
+            onClick={handleGoogleLogin}
+            className="flex w-full items-center justify-center relative p-2 border-2 rounded-full"
+          >
+            <div className="absolute left-3">
+              <GoogleIcon width={20} height={20} />
+            </div>
+            <p>Continue with Google</p>
+          </button>
           <p className="text-sm font-medium mt-5 text-[#777777]">
             Already a member?{" "}
             <Link href="/login" className="text-black">
