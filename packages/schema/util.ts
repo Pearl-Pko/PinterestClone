@@ -64,7 +64,7 @@ export function IsStrongPassword(validationOptions?: ValidationOptions) {
                     );
                 },
                 defaultMessage(args: ValidationArguments) {
-                    return `${args.property} must be a strong password (at least 6 characters, including uppercase, lowercase, number, and a special character)`;
+                    return `${args.property} must contain at least 6 characters, including uppercase, lowercase, number, and a special character`;
                 },
             },
         });

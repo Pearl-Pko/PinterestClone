@@ -1,28 +1,44 @@
-"use client"
+"use client";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Checkbox } from "@web/src/components/ui/checkbox";
 import { useGetProfile, useUnlinkProvider } from "@web/src/service/useUser";
-import React from "react";
+import React, { useEffect, useState } from "react";
+import SetPassword from "./SetPassword";
+import { useToast } from "@web/src/hooks/use-toast";
 
 export default function page() {
   const queryClient = useQueryClient();
-  
-  const {data} = useQuery({
+  const {toast} = useToast();
+  const [passwordDialogOpen, setPasswordDialogOpen] = useState(false);
+
+  const { data } = useQuery({
     queryKey: ["profile"],
-    queryFn: useGetProfile
-  })
+    queryFn: useGetProfile,
+  });
 
+  const canUnlinkProviders = !!data?.hasPassword;
 
-  const {mutate} = useMutation({
-    mutationFn: useUnlinkProvider,
-    onSuccess: () => {
-      queryClient.invalidateQueries({queryKey: ['profile']});
-    }
-  })
+  const { mutate: unlinkProvider, mutateAsync: unlinkProviderAsync } =
+    useMutation({
+      mutationFn: useUnlinkProvider,
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: ["profile"] });
+      },
+    });
 
   const handleGoogleLink = async () => {
     window.open("/api/user/google/link", "_blank", "width=500,height=600");
   };
+
+  // useEffect(() => {
+  //   setTimeout(() => toast({
+  //     description:
+  //       "Password has been set and provider has been unlinked successfully",
+  //       className: "bg-black text-white",
+
+        
+  //   }), 300);
+  // }, [])
 
   return (
     <div className="w-[500px]">
@@ -54,21 +70,35 @@ export default function page() {
           <p>Use your social account to log in to pinterest</p>
         </div>
         <div className="flex flex-row items-center gap-3 my-3">
-          <Checkbox checked={data?.providers.includes("google")} onCheckedChange={(checked) => {
-            if (checked) {
-              handleGoogleLink();
-            }
-            else {
-              mutate({provider: "google"});
-            }
-          }}/>
+          <Checkbox
+            checked={data?.providers.includes("google")}
+            onCheckedChange={(checked) => {
+              if (checked) {
+                handleGoogleLink();
+              } else {
+                if (canUnlinkProviders) unlinkProvider({ provider: "google" });
+                else setPasswordDialogOpen(true);
+              }
+            }}
+          />
           <p>Use your Google account to log in</p>
         </div>
       </div>
       <div>
         <h2 className="text-xl font-medium">Connected devices</h2>
-        <p>This is a list of devices that have logged in to your account. Revoke access to any devices you don't recognise</p>
+        <p>
+          This is a list of devices that have logged in to your account. Revoke
+          access to any devices you don't recognise
+        </p>
       </div>
+      <SetPassword
+        open={passwordDialogOpen}
+        setOpen={setPasswordDialogOpen}
+        fn={async () => {
+          await unlinkProviderAsync({ provider: "google" });
+
+        }}
+      />
     </div>
   );
 }

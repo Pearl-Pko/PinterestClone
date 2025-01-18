@@ -1,4 +1,4 @@
-import { CreateUserDto, ResetPasswordDto } from "@schema/user";
+import { CreateUserDto, ResetPasswordDto, SetPasswordDto } from "@schema/user";
 import {
   IsNotEmpty,
   Validate,
@@ -31,4 +31,9 @@ export class CreateUserDtoWithConfirmation extends CreateUserDto {
 export class ResetPasswordDtoWithConfirmation extends ResetPasswordDto {
   @Validate(MatchConstraint, ["newPassword"])
   confirmNewPassword: string;
+}
+
+export class SetPasswordDtoWithConfirmation extends SetPasswordDto {
+  @Validate(MatchConstraint, ["password"])
+  confirmPassword: string;
 }

@@ -10,6 +10,7 @@ import { LoginUserDto } from "@schema/user";
 import { SessionContextType } from "../types/session";
 import { CallbackMessage } from "../app/(auth)/callback/page";
 import { isPublic } from "../lib/utils";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface Props {
   children: React.ReactNode;
@@ -19,6 +20,7 @@ export const SessionContext = createContext<SessionContextType | null>(null);
 
 export const SessionProvider = ({ children }: Props) => {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const login = async (user: LoginUserDto) => {};
 
   const signup = async () => {};
@@ -75,6 +77,7 @@ export const SessionProvider = ({ children }: Props) => {
         } else {
           router.push(pathname);
           router.refresh();
+          queryClient.invalidateQueries({ queryKey: ["profile"] });
         }
       }
     };

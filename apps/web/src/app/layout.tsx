@@ -2,6 +2,7 @@ import "reflect-metadata";
 import "./globals.css";
 import AppProvider from "./AppProvider";
 import DrawerHeader from "../components/DrawerHeader";
+import { Toaster } from "../components/ui/toaster";
 
 export default function RootLayout({
   children,
@@ -18,6 +19,7 @@ export default function RootLayout({
             <AppProvider>{children}</AppProvider>
           </div>
         </div>
+        <Toaster/>
       </body>
     </html>
   );

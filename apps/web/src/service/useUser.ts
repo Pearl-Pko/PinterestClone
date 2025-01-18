@@ -1,6 +1,7 @@
 import {
   ForgotPasswordDto,
   ResetPasswordDto,
+  SetPasswordDto,
   UnlinkProviderDto,
   UserEntityDto,
 } from "@schema/user";
@@ -37,4 +38,8 @@ export const useResetPassword = async (data: ResetPasswordDto) => {
 
 export const useUnlinkProvider = async (data: UnlinkProviderDto) => {
   return (await api.post("user/unlink-provider", data)).data;
+};
+
+export const useSetPassword = async (data: SetPasswordDto) => {
+  return (await api.post("user/set-password", data)).data;
 };
