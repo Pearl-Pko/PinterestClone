@@ -152,7 +152,10 @@ export default function SideNav({
               </div>
               <Icon
                 icon={<CloseSideNavIcon />}
-                className={cn("p-3", batchOperation && "opacity-35 pointer-events-none")}
+                className={cn(
+                  "p-3",
+                  batchOperation && "opacity-35 pointer-events-none",
+                )}
                 onClick={() => {
                   setOpen(false);
                 }}

@@ -28,6 +28,9 @@ export class UsersService {
                     { id: id },
                 ],
             },
+            include: {
+                 Account: true
+            }
         });
     }
 

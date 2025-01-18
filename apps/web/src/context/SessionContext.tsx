@@ -8,6 +8,8 @@ import { useRouter } from "next/navigation";
 import { clearSession } from "../actions/auth";
 import { LoginUserDto } from "@schema/user";
 import { SessionContextType } from "../types/session";
+import { CallbackMessage } from "../app/(auth)/callback/page";
+import { isPublic } from "../lib/utils";
 
 interface Props {
   children: React.ReactNode;
@@ -56,6 +58,31 @@ export const SessionProvider = ({ children }: Props) => {
     );
     return () => api.interceptors.response.eject(instanceId);
   }, [api]);
+
+  useEffect(() => {
+    const handleMessage = (event: MessageEvent<CallbackMessage>) => {
+      if (event.origin !== "http://localhost:3000") return;
+
+      if (event.data.source !== "auth") return;
+
+      console.log("el", event.data);
+
+      console.log("event received");
+      if (!event.data.error && event.data.redirectAddress) {
+        const pathname = new URL(event.data.redirectAddress).pathname;
+        if (isPublic(pathname)) {
+          router.push("/");
+        } else {
+          router.push(pathname);
+          router.refresh();
+        }
+      }
+    };
+
+    window.addEventListener("message", handleMessage);
+
+    return () => window.removeEventListener("message", handleMessage);
+  }, [router]);
 
   return (
     <SessionContext.Provider value={{ login, signup, refreshToken, logout }}>

@@ -1,7 +1,7 @@
 import { redirect } from "next/dist/server/api-utils";
 import { NextRequest, NextResponse } from "next/server";
+import { isPublic } from "./lib/utils";
 
-const publicRoutes = ["/login", "/signup", "/password/reset", "/reset-password", "/callback"];
 
 export function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
@@ -11,8 +11,12 @@ export function middleware(req: NextRequest) {
   const isAuthenticated =
     req.cookies.has("access_token") && req.cookies.has("refresh_token");
   
-  if (!isAuthenticated && !publicRoutes.includes(pathname)) {
+  if (!isAuthenticated && !isPublic(pathname)) {
     return NextResponse.redirect(new URL("/login", req.url));
+  }
+
+  if (isAuthenticated && isPublic(pathname)) {
+    return NextResponse.redirect(new URL("/", req.url))
   }
 
   return NextResponse.next();

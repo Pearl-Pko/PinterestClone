@@ -5,7 +5,8 @@ import { AccessTokenDTO } from '@schema/auth';
 
 export type OAuthState = {
     userId?: string;
-    source: "link" | "signin"
+    source: "link" | "signin";
+    redirectAddress?: string;
 }
 
 @Injectable()
@@ -18,6 +19,8 @@ export class GoogleOauthGuard extends AuthGuard('google') {
         context: ExecutionContext,
     ): IAuthModuleOptions | undefined {
         const request = context.switchToHttp().getRequest();
+        const referer = request.headers.referer || request.headers.referrer;
+
         const user = request?.user as Partial<AccessTokenDTO>;
         const state = JSON.stringify({
             userId: user?.sub,
@@ -27,6 +30,7 @@ export class GoogleOauthGuard extends AuthGuard('google') {
                     : request.path === '/user/google/link'
                       ? 'link'
                       : '',
+            redirectAddress: referer
         } as OAuthState);
         return {
             state: Buffer.from(state).toString("base64url"),

@@ -1,13 +1,21 @@
-import { User, Post, Prisma, $Enums, Gender } from "@prisma/client";
-import {z} from "zod"
-import { IsDate, IsEmail, IsEnum, IsNotEmpty, IsOptional, IsUUID,  } from 'class-validator';
-import { PickType } from "nestjs-mapped-types";
-import { Exclude, Expose } from "class-transformer";
+import {User, Post, Prisma, $Enums, Gender, Account} from "@prisma/client";
+import {z} from "zod";
+import {
+    IsArray,
+    IsDate,
+    IsEmail,
+    IsEnum,
+    IsNotEmpty,
+    IsOptional,
+    IsUUID,
+} from "class-validator";
+import {PickType} from "nestjs-mapped-types";
+import {Exclude, Expose} from "class-transformer";
 export class UserEntity implements User {
     @IsUUID()
     id: string;
 
-    @IsEmail() 
+    @IsEmail()
     @IsOptional()
     email: string | null;
 
@@ -17,9 +25,9 @@ export class UserEntity implements User {
     @IsOptional()
     first_name: string | null;
 
-    @IsOptional() 
+    @IsOptional()
     last_name: string | null;
-    
+
     @IsOptional()
     about: string | null;
 
@@ -28,6 +36,7 @@ export class UserEntity implements User {
 
     @IsNotEmpty()
     @IsOptional()
+    @Exclude()
     password: string | null;
 
     @IsOptional()
@@ -47,51 +56,59 @@ export class UserEntity implements User {
     updated_at: Date;
 
     @IsOptional()
+    @Exclude()
     reset_token: string | null;
 
-
     @IsOptional()
+    @Exclude()
     reset_token_expires_at: Date | null;
+
+    @Exclude()
+    @IsArray()
+    Account: Account[];
+
+    @Expose({name: "full_name"})
+    getFullName() {
+        return this.first_name + " " + this.last_name;
+    }
+
+    @Expose({name: "hasPassword"})
+    getHasPassword() {
+        return !!this.password;
+    }
+
+    @Expose({name: "providers"})
+    getProviders() {
+        return new Set(this.Account.map((account) => account.provider));
+    }
 
     constructor(partial: Partial<UserEntity>) {
         Object.assign(this, partial);
-      }
-} 
-
+    }
+}
 
 // export type UserEntityDto = {
 
 // }
 
-export type UserEntityDto = Omit<UserEntity, "password" | "reset_token" | "reset_token_expires_at"> & {full_name: string}
+export type UserEntityDto = Omit<
+    UserEntity,
+    "password" | "reset_token" | "reset_token_expires_at"
+> & {full_name: string, providers: string[], hasPassword: boolean};
 
-export class UserEntitySerializer extends UserEntity  {
-    @Exclude()
-    password: string;
+type a = Partial<UserEntity>;
 
-    @Exclude() 
-    reset_token: string | null;
-
-    @Exclude()
-    reset_token_expires_at: Date | null;
-
-    @Expose({name: "full_name"})
-    getFullName() {
-        return this.first_name + " " + this.last_name
-    }
-}
-
-type a = Partial<UserEntity>
-
-
-
-export class CreateUserDto extends PickType(UserEntity, ["email", "password"] as const) implements Omit<Prisma.UserCreateInput, 'username'> {
+export class CreateUserDto
+    extends PickType(UserEntity, ["email", "password"] as const)
+    implements Omit<Prisma.UserCreateInput, "username">
+{
     email: string;
     password: string;
 }
 
-export class LoginUserDto extends PickType(UserEntity, ["email", "password"] as const) implements Omit<Prisma.UserCreateInput, 'username'> {}
-
+export class LoginUserDto
+    extends PickType(UserEntity, ["email", "password"] as const)
+    implements Omit<Prisma.UserCreateInput, "username"> {}
 
 export class ChangePassword {
     @IsNotEmpty()
@@ -107,7 +124,6 @@ export class ForgotPasswordDto {
     email: string;
 }
 
-
 export class ResetPasswordDto {
     @IsNotEmpty()
     token: string;
@@ -116,3 +132,7 @@ export class ResetPasswordDto {
     newPassword: string;
 }
 
+export class UnlinkProviderDto {
+    @IsNotEmpty()
+    provider: string;
+}

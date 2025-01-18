@@ -4,6 +4,7 @@ import api from "@web/src/utils/api";
 import { useQuery } from "@tanstack/react-query";
 import { useGetProfile } from "@web/src/service/useUser";
 import { PinterestIcon } from "@web/public";
+import Link from "next/link";
 
 export default function page({
   params,
@@ -33,11 +34,11 @@ export default function page({
               <p>Share</p>
             </div>
           </button>
-          <button>
+          <Link href="/settings">
             <div className="px-4 py-2 bg-gray-200 rounded-full">
               <p>Edit Profile</p>
             </div>
-          </button>
+          </Link>
         </div>
       </div>
       <div className="flex justify-center gap-5 mt-10">

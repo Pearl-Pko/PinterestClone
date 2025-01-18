@@ -13,7 +13,7 @@ import { JwtService } from '@nestjs/jwt';
 import { AccessTokenDTO, RefreshTokenDto } from '@schema/auth';
 
 export type Session = {
-    redirect?: boolean
+    redirectAddress?: string
 } & Tokens;
 
 @Injectable()
@@ -53,8 +53,8 @@ export class AddSessionInterceptor implements NestInterceptor {
                     });
                 }
 
-                if (data.redirect) {
-                    response.redirect("http://localhost:3000/callback")
+                if (data.redirectAddress) {
+                    response.redirect(`http://localhost:3000/callback?redirectAddress=${encodeURIComponent(data.redirectAddress)}`)
                 }
             }),
         );

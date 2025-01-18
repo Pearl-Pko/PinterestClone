@@ -157,8 +157,7 @@ export class AuthService {
                 throw new ConflictException(
                     'This provider has already been linked to this account',
                 );
-            }
-            else {
+            } else {
                 throw new ConflictException(
                     'This provider is linked to another account',
                 );
@@ -170,6 +169,34 @@ export class AuthService {
                 provider: user.provider,
                 providerId: user.id,
                 user_id: userId,
+            },
+        });
+
+        return true;
+    }
+
+    async handleProviderUnlink(userId: string, provider: string) {
+        const user = await this.databaseService.user.findUnique({
+            where: {
+                id: userId,
+            },
+            include: {
+                Account: true,
+            },
+        });
+
+        const hasPassword = !!user?.password;
+
+        if (!hasPassword) {
+            throw new BadRequestException(
+                'You cannot unlink your provider without a password. Please set a password first.',
+            );
+        }
+
+        await this.databaseService.account.deleteMany({
+            where: {
+                user_id: userId,
+                provider: provider,
             },
         });
 

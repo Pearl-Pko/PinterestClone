@@ -26,19 +26,24 @@ import { User } from '@server/decorators/user';
 import { RefreshToken } from '@server/types/auth';
 // import { ChangePassword, ForgotPasswordDto, ResetPasswordDto } from './dto/dto';
 import { MailService } from '../mail/mail.service';
-import { AddSessionInterceptor, Session } from '@server/interceptors/add-session-interceptor';
+import {
+    AddSessionInterceptor,
+    Session,
+} from '@server/interceptors/add-session-interceptor';
 import { RemoveSessionInterceptor } from '@server/interceptors/delete-session-interceptor';
 import {
     ChangePassword,
     CreateUserDto,
     ForgotPasswordDto,
     ResetPasswordDto,
+    UnlinkProviderDto,
 } from '@schema/user';
 import { AccessTokenDTO } from '@schema/auth';
 import { GoogleOauthGuard, OAuthState } from './guards/google-oauth.guard';
 import { GoogleProfile } from './strategy/google.strategy';
 import { UserWithIdNotFoundException } from '@server/common/exceptions/exceptions';
 import { Response } from 'express';
+import { ApiResponse } from '@schema/util';
 @Controller('user')
 export class AuthController {
     constructor(
@@ -95,14 +100,17 @@ export class AuthController {
     async googleAuthRedirect(
         @User<GoogleProfile>() user: GoogleProfile,
         @Query('state') state: string,
-        @Res() res: Response
+        @Res() res: Response,
     ) {
         const oauthState = JSON.parse(
             Buffer.from(state, 'base64').toString('utf8'),
         ) as OAuthState;
 
         if (oauthState.source === 'signin') {
-            return {...await this.authService.handleProviderLogin(user), redirect: true} as Session;
+            return {
+                ...(await this.authService.handleProviderLogin(user)),
+                redirectAddress: oauthState.redirectAddress,
+            } as Session;
         } else {
             if (!oauthState.userId) {
                 throw new BadRequestException('User Id not found');
@@ -118,6 +126,7 @@ export class AuthController {
                 status: linkSuccessful ? 'sucess' : 'failed',
                 message:
                     'This provider has successfully been linked to this account',
+                redirectAddress: oauthState.redirectAddress,
             };
         }
     }
@@ -125,6 +134,17 @@ export class AuthController {
     @Get('google/link')
     @UseGuards(GoogleOauthGuard)
     async googleAuthLink() {}
+
+    @Post('unlink-provider')
+    async unlinkProivder(@User<AccessTokenDTO>() user: AccessTokenDTO, @Body() provider : UnlinkProviderDto) : Promise<ApiResponse> {
+        const result = await this.authService.handleProviderUnlink(user.sub, provider.provider)
+        return {
+            status: result ? "success" : "failed",
+            message: "Provider unlinked successfullly"
+        }
+    }
+
+
 
     @Public()
     @Get('google/link/callback')

@@ -14,7 +14,7 @@ import {
 import { UsersService } from './users.service';
 import { Prisma } from '@prisma/client';
 import { User } from '@server/decorators/user';
-import { CreateUserDto, UserEntity, UserEntitySerializer } from '@schema/user';
+import { CreateUserDto, UserEntity } from '@schema/user';
 import {
     UserWithEmailNotFoundException,
     UserWithIdNotFoundException,
@@ -36,6 +36,6 @@ export class UsersController {
             throw new UserWithIdNotFoundException(token.sub);
         }
 
-        return new UserEntitySerializer(user);
+        return new UserEntity({...user, });
     }
 }

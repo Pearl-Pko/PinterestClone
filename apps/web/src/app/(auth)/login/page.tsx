@@ -49,25 +49,6 @@ export default function page() {
     window.open("/api/user/google", "_blank", "width=500,height=600");
   };
 
-  useEffect(() => {
-    const handleMessage = (event: MessageEvent<CallbackMessage>) => {
-      if (event.origin !== "http://localhost:3000") return;
-
-      if (event.data.source !== "auth") return;
-
-      console.log("el", event.data);
-
-      console.log("event received");
-      if (!event.data.error) router.push("/");
-      // router.replace("/");
-      // window.location.reload();
-    };
-
-    window.addEventListener("message", handleMessage);
-
-    return () => window.removeEventListener("message", handleMessage);
-  }, [router]);
-
   console.log("yes", errors);
   return (
     <div className="flex items-center justify-center">
