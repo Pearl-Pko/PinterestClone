@@ -17,6 +17,7 @@ import {
     PasswordRequiredException,
     UserAlreadyExists,
     UserWithEmailNotFoundException,
+    UserWithIdNotFoundException,
 } from '@server/common/exceptions/exceptions';
 import * as bcrypt from 'bcrypt';
 import { SessionService } from '../session/session.service';
@@ -32,6 +33,7 @@ import {
     ChangePassword,
     CreateUserDto,
     ResetPasswordDto,
+    SetPasswordDto,
     UserEntity,
 } from '@schema/user';
 import {
@@ -87,6 +89,7 @@ export class AuthService {
             throw new UserAlreadyExists();
         }
 
+        console.log("ds", user.password);
         const hashPassword = await this.hashData(user.password);
         const newUser = await this.usersService.create({
             email: user.email,
@@ -123,6 +126,7 @@ export class AuthService {
             existingUser = await this.databaseService.user.create({
                 data: {
                     username: convertTextToSlug(email.split('@')[0]),
+                    email: email
                 },
             });
         }
@@ -403,6 +407,26 @@ export class AuthService {
         });
 
         await this.sessionService.invalidateUserSessions(user.id);
+        return true;
+    }
+
+    async setPassword(userToken: AccessTokenDTO, setPasswordDto: SetPasswordDto) {
+        const user = await this.usersService.findUser({id: userToken.sub})
+
+        if (!user) 
+            throw new UserWithIdNotFoundException(userToken.sub);
+
+        if (user.password) {
+            throw new BadRequestException('Password already set. Please reset it instead.');
+          }
+        
+
+        const hashPassword = await this.hashData(setPasswordDto.password);
+
+
+        await this.usersService.updateUser(userToken.sub, {
+            password: hashPassword
+        })
         return true;
     }
 }

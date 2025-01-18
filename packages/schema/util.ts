@@ -1,5 +1,12 @@
-import { Type } from "class-transformer";
-import { IsNumber, IsOptional, Min } from "class-validator";
+import {Type} from "class-transformer";
+import {
+    registerDecorator,
+    ValidationArguments,
+    ValidationOptions,
+    ValidatorConstraint,
+    ValidatorConstraintInterface,
+} from "class-validator";
+import {IsNumber, IsOptional, Min} from "class-validator";
 
 export class PaginatedQuery {
     @IsOptional()
@@ -12,9 +19,7 @@ export class PaginatedQuery {
     @Type(() => Number)
     @Min(1)
     @IsNumber({}, {message: "limit must be a number"})
-    limit: number = 10
-
-
+    limit: number = 10;
 }
 
 export class PaginatedResponse<T> {
@@ -27,5 +32,41 @@ export class PaginatedResponse<T> {
 export class ApiResponse<T = void> {
     status: "pending" | "success" | "failed";
     message: string;
-    data?: T 
+    data?: T;
+}
+
+export function IsStrongPassword(validationOptions?: ValidationOptions) {
+    return function (object: Object, propertyName: string) {
+        registerDecorator({
+            name: "isStrongPassword",
+            target: object.constructor,
+            propertyName: propertyName,
+            options: validationOptions,
+            validator: {
+                validate(value: any, args: ValidationArguments) {
+                    if (typeof value !== "string") {
+                        return false;
+                    }
+
+                    // Define your strong password criteria
+                    const hasUpperCase = /[A-Z]/.test(value);
+                    const hasLowerCase = /[a-z]/.test(value);
+                    const hasNumber = /[0-9]/.test(value);
+                    const hasSpecialChar =
+                        /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(value);
+                    const isLongEnough = value.length >= 6;
+                    return (
+                        hasUpperCase &&
+                        hasLowerCase &&
+                        hasNumber &&
+                        hasSpecialChar &&
+                        isLongEnough
+                    );
+                },
+                defaultMessage(args: ValidationArguments) {
+                    return `${args.property} must be a strong password (at least 6 characters, including uppercase, lowercase, number, and a special character)`;
+                },
+            },
+        });
+    };
 }

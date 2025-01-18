@@ -11,6 +11,8 @@ import {
 } from "class-validator";
 import {PickType} from "nestjs-mapped-types";
 import {Exclude, Expose} from "class-transformer";
+import {IsStrongPassword} from "./util";
+
 export class UserEntity implements User {
     @IsUUID()
     id: string;
@@ -35,8 +37,9 @@ export class UserEntity implements User {
     website: string | null;
 
     @IsNotEmpty()
+    @IsStrongPassword()
     @IsOptional()
-    @Exclude()
+    @Exclude({toPlainOnly: true})
     password: string | null;
 
     @IsOptional()
@@ -94,7 +97,7 @@ export class UserEntity implements User {
 export type UserEntityDto = Omit<
     UserEntity,
     "password" | "reset_token" | "reset_token_expires_at"
-> & {full_name: string, providers: string[], hasPassword: boolean};
+> & {full_name: string; providers: string[]; hasPassword: boolean};
 
 type a = Partial<UserEntity>;
 
@@ -114,7 +117,7 @@ export class ChangePassword {
     @IsNotEmpty()
     oldPassword: string;
 
-    @IsNotEmpty()
+    @IsStrongPassword()
     newPassword: string;
 }
 
@@ -129,10 +132,17 @@ export class ResetPasswordDto {
     token: string;
 
     @IsNotEmpty()
+    @IsStrongPassword()
     newPassword: string;
 }
 
 export class UnlinkProviderDto {
     @IsNotEmpty()
     provider: string;
+}
+
+export class SetPasswordDto {
+    @IsNotEmpty()
+    @IsStrongPassword()
+    password: string;
 }

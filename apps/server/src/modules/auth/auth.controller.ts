@@ -16,6 +16,7 @@ import {
     Req,
     Query,
     BadRequestException,
+    applyDecorators,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { AuthGuard } from '@nestjs/passport';
@@ -36,6 +37,7 @@ import {
     CreateUserDto,
     ForgotPasswordDto,
     ResetPasswordDto,
+    SetPasswordDto,
     UnlinkProviderDto,
 } from '@schema/user';
 import { AccessTokenDTO } from '@schema/auth';
@@ -44,6 +46,8 @@ import { GoogleProfile } from './strategy/google.strategy';
 import { UserWithIdNotFoundException } from '@server/common/exceptions/exceptions';
 import { Response } from 'express';
 import { ApiResponse } from '@schema/util';
+import { set } from 'date-fns';
+
 @Controller('user')
 export class AuthController {
     constructor(
@@ -205,5 +209,13 @@ export class AuthController {
             'Failed to reset password',
             HttpStatus.NOT_FOUND,
         );
+    }
+
+    @Post("set-password")
+    @HttpCode(HttpStatus.OK)
+    async setPassword(@User<AccessTokenDTO>() user: AccessTokenDTO, @Body() setPassowrdDto: SetPasswordDto) : Promise<ApiResponse> {
+        const setPass = await this.authService.setPassword(user, setPassowrdDto)
+
+        return { message: 'Password set successfully', status: "success" };
     }
 }
