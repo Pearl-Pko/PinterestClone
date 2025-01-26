@@ -7,6 +7,8 @@ export const MockUserEntity: User = {
     username: 'ksa',
     password: '32,ljk4j3l',
     first_name: null,
+    displayPhoto: "da", 
+    language: "323",
     last_name: 'james',
     about: 'I think therefore I am',
     website: 'kew',

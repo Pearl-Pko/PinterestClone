@@ -3,14 +3,16 @@ import {z} from "zod";
 import {
     IsArray,
     IsDate,
+    IsDateString,
     IsEmail,
     IsEnum,
     IsNotEmpty,
     IsOptional,
     IsUUID,
+    MaxDate,
 } from "class-validator";
-import {PickType} from "nestjs-mapped-types";
-import {Exclude, Expose} from "class-transformer";
+import {PartialType, PickType} from "nestjs-mapped-types";
+import {Exclude, Expose, Transform, Type} from "class-transformer";
 import {IsStrongPassword} from "./util";
 
 export class UserEntity implements User {
@@ -31,6 +33,12 @@ export class UserEntity implements User {
     last_name: string | null;
 
     @IsOptional()
+    displayPhoto: string | null;
+
+    @IsOptional()
+    language: string | null;
+
+    @IsOptional()
     about: string | null;
 
     @IsOptional()
@@ -43,6 +51,11 @@ export class UserEntity implements User {
     password: string | null;
 
     @IsOptional()
+    @Type(() => Date)
+    @IsDate({message: "Date must be a valid ISO8601 string"})
+    @MaxDate(() => new Date(), {
+        message: "Date of birth cannot be in the future"
+    })
     date_of_birth: Date | null;
 
     @IsEnum(Gender)
@@ -68,7 +81,7 @@ export class UserEntity implements User {
 
     @Exclude()
     @IsArray()
-    Account: Account[];
+    Account?: Account[];
 
     @Expose({name: "full_name"})
     getFullName() {
@@ -82,7 +95,7 @@ export class UserEntity implements User {
 
     @Expose({name: "providers"})
     getProviders() {
-        return new Set(this.Account.map((account) => account.provider));
+        return new Set(this.Account?.map((account) => account.provider));
     }
 
     constructor(partial: Partial<UserEntity>) {
@@ -146,3 +159,16 @@ export class SetPasswordDto {
     @IsStrongPassword()
     password: string;
 }
+
+export class EditProfileDto extends PartialType(
+    PickType(UserEntity, [
+        "first_name",
+        "last_name",
+        "language",
+        "about",
+        "website",
+        "date_of_birth",
+        "gender",
+        "country",
+    ] as const)
+) {}

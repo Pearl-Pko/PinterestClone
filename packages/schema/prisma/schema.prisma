@@ -15,15 +15,17 @@ datasource db {
 
 model User {
   id                     String    @id @default(uuid())
-  email                  String?    @unique
+  email                  String?   @unique
   username               String    @unique
   first_name             String?
   last_name              String?
   about                  String?
   website                String?
   password               String?
+  displayPhoto             String?
   date_of_birth          DateTime? @db.Date
   gender                 Gender?
+  language               String?
   country                String?
   created_at             DateTime  @default(now())
   updated_at             DateTime  @updatedAt
@@ -41,10 +43,11 @@ model Account {
   providerId   String
   accessToken  String?
   refreshToken String?
-  user      User     @relation(fields: [user_id], references: [id])
-  user_id   String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  user         User     @relation(fields: [user_id], references: [id])
+  user_id      String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
   @@id([provider, providerId])
 }
 

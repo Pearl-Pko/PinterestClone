@@ -39,7 +39,7 @@ export class S3Service {
         this.bucketName = this.configService.get<string>('BUCKET_NAME');
     }
 
-    async uploadFile(file: MemoryStoredFile, key: string, tags: S3Tag[]) {
+    async uploadFile(file: MemoryStoredFile, key: string, tags?: S3Tag[]) {
         key = 'public/' + key;
 
         const command = new PutObjectCommand({
@@ -48,7 +48,7 @@ export class S3Service {
             Body: file.buffer,
 
             ContentType: file.mimetype,
-            Tagging: tags.map((tag) => `${tag.Key}=${tag.Value}`).join('&'),
+            Tagging: tags ? tags.map((tag) => `${tag.Key}=${tag.Value}`).join('&') : "",
         });
 
         try {

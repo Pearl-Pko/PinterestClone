@@ -20,6 +20,8 @@ import {
     UserWithIdNotFoundException,
 } from '@server/common/exceptions/exceptions';
 import { AccessTokenDTO } from '@schema/auth';
+import { FormDataRequest, MemoryStoredFile } from 'nestjs-form-data';
+import { EditProfileDto } from './dto/user.dto';
 
 @Controller('user')
 export class UsersController {
@@ -36,6 +38,20 @@ export class UsersController {
             throw new UserWithIdNotFoundException(token.sub);
         }
 
-        return new UserEntity({...user, });
+        return new UserEntity({ ...user });
+    }
+
+    @Patch('profile')
+    @FormDataRequest({ storage: MemoryStoredFile })
+    @UseInterceptors(ClassSerializerInterceptor)
+    async edit(
+        @Body() updateUserDto: EditProfileDto,
+        @User<AccessTokenDTO>() token: AccessTokenDTO,
+    ) {
+        const updatedUser = await this.usersService.editUser(
+            token.sub,
+            updateUserDto,
+        );
+        return new UserEntity(updatedUser);
     }
 }

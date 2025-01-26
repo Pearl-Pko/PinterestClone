@@ -3,10 +3,16 @@ import { DatabaseService } from '@server/modules/database/database.service';
 import { Prisma, User } from '@prisma/client';
 import { CreateUserDto } from '@schema/user';
 import { convertTextToSlug } from '@server/utils/format';
+import { EditProfileDto } from './dto/user.dto';
+import { S3Service } from '../s3/s3.service';
+import { UserWithIdNotFoundException } from '@server/common/exceptions/exceptions';
 
 @Injectable()
 export class UsersService {
-    constructor(private readonly database: DatabaseService) {}
+    constructor(
+        private readonly database: DatabaseService,
+        private readonly s3Service: S3Service,
+    ) {}
 
     async findUser({
         username,
@@ -29,8 +35,8 @@ export class UsersService {
                 ],
             },
             include: {
-                 Account: true
-            }
+                Account: true,
+            },
         });
     }
 
@@ -43,7 +49,7 @@ export class UsersService {
     }
 
     async create(user: CreateUserDto) {
-        const defaultUserName = convertTextToSlug(user.email.split("@")[0]);
+        const defaultUserName = convertTextToSlug(user.email.split('@')[0]);
 
         return await this.database.user.create({
             data: {
@@ -58,5 +64,26 @@ export class UsersService {
             where: { id: userId },
             data: newData,
         });
+    }
+
+    async editUser(userId: string, data: EditProfileDto) {
+        const user = await this.findUser({ id: userId });
+
+        if (!user) {
+            throw new UserWithIdNotFoundException(userId);
+        }
+
+        const { displayPhoto, ...rest } = data;
+
+        let uri = user.displayPhoto;
+
+        if (displayPhoto) {
+            uri = await this.s3Service.uploadFile(
+                displayPhoto,
+                `user/${userId}/display_photo/${Date.now()}`,
+            );
+        }
+
+        return await this.updateUser(userId, { ...rest, displayPhoto: uri });
     }
 }
