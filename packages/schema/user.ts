@@ -9,7 +9,10 @@ import {
     IsNotEmpty,
     IsOptional,
     IsUUID,
+    Length,
+    Matches,
     MaxDate,
+    MinLength,
 } from "class-validator";
 import {PartialType, PickType} from "nestjs-mapped-types";
 import {Exclude, Expose, Transform, Type} from "class-transformer";
@@ -24,6 +27,10 @@ export class UserEntity implements User {
     email: string | null;
 
     @IsNotEmpty()
+    @Length(2, 30)
+    @Matches(/^[a-z0-9]+(-[a-z0-9]+)*$/, {
+        message: 'Username must be a slug: lowercase letters, numbers, and hyphens only.',
+      })
     username: string;
 
     @IsOptional()
@@ -172,3 +179,7 @@ export class EditProfileDto extends PartialType(
         "country",
     ] as const)
 ) {}
+
+export class ChangeUsernameDto extends PickType(UserEntity, ["username"] as const) {
+
+}

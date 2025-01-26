@@ -14,7 +14,7 @@ import {
 import { UsersService } from './users.service';
 import { Prisma } from '@prisma/client';
 import { User } from '@server/decorators/user';
-import { CreateUserDto, UserEntity } from '@schema/user';
+import { ChangeUsernameDto, CreateUserDto, UserEntity } from '@schema/user';
 import {
     UserWithEmailNotFoundException,
     UserWithIdNotFoundException,
@@ -48,10 +48,19 @@ export class UsersController {
         @Body() updateUserDto: EditProfileDto,
         @User<AccessTokenDTO>() token: AccessTokenDTO,
     ) {
-        const updatedUser = await this.usersService.editUser(
+        const updatedUser = await this.usersService.editProfile(
             token.sub,
             updateUserDto,
         );
         return new UserEntity(updatedUser);
+    }
+
+    @Patch(':id/username')
+    async editUserName(
+        @Body() changeUserNameDto: ChangeUsernameDto,
+        @User<AccessTokenDTO>() token: AccessTokenDTO,
+    ) {
+        const updatedUser = await this.usersService.changeUsername(token.sub, changeUserNameDto)
+        return new UserEntity(updatedUser)
     }
 }

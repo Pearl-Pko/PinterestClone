@@ -1,7 +1,11 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+    ConflictException,
+    Injectable,
+    NotFoundException,
+} from '@nestjs/common';
 import { DatabaseService } from '@server/modules/database/database.service';
 import { Prisma, User } from '@prisma/client';
-import { CreateUserDto } from '@schema/user';
+import { ChangeUsernameDto, CreateUserDto } from '@schema/user';
 import { convertTextToSlug } from '@server/utils/format';
 import { EditProfileDto } from './dto/user.dto';
 import { S3Service } from '../s3/s3.service';
@@ -66,7 +70,7 @@ export class UsersService {
         });
     }
 
-    async editUser(userId: string, data: EditProfileDto) {
+    async editProfile(userId: string, data: EditProfileDto) {
         const user = await this.findUser({ id: userId });
 
         if (!user) {
@@ -85,5 +89,14 @@ export class UsersService {
         }
 
         return await this.updateUser(userId, { ...rest, displayPhoto: uri });
+    }
+
+    async changeUsername(userId: string, data: ChangeUsernameDto) {
+        const user = await this.findUser({ username: data.username });
+
+        if (user && user.id != userId)
+            throw new ConflictException('Username is already taken');
+
+        return await this.updateUser(userId, { username: data.username });
     }
 }
