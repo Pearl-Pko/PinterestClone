@@ -1,15 +1,17 @@
 import {
     Controller,
     Get,
-    Post,
     Body,
     Patch,
     Param,
+    Post,
     Delete,
     NotFoundException,
     UseInterceptors,
     UploadedFile,
     Query,
+    ClassSerializerInterceptor,
+    SerializeOptions,
 } from '@nestjs/common';
 import { PostsService } from './posts.service';
 import { User } from '@server/decorators/user';
@@ -25,24 +27,53 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { FormDataRequest, MemoryStoredFile } from 'nestjs-form-data';
 import { ApiResponse, PaginatedQuery, PaginatedResponse } from '@schema/util';
 import { CreatePostDto, UpdatePostDto } from './dto/post.dto';
+import { PinEntity } from '@schema/pin';
+import {
+    Expose,
+    instanceToPlain,
+    plainToClassFromExist,
+    plainToInstance,
+    Type,
+} from 'class-transformer';
+import { Post as _Post } from '@prisma/client';
+
+class PostEntityApiResponse extends ApiResponse<PostEntity> {
+    @Type(() => PostEntity)
+    data?: PostEntity | undefined;
+}
+
+class PostEntityPaginatedResponse extends PaginatedResponse<PostEntity> {
+    @Type(() => PostEntity)
+    data: PostEntity[];
+}
+
+// @UseInterceptors(ClassSerializerInterceptor)
 @Controller('posts')
 export class PostsController {
     constructor(private readonly postsService: PostsService) {}
 
     @Post()
     @FormDataRequest({ storage: MemoryStoredFile })
+    @SerializeOptions({
+        groups: ['user.embed'],
+        type: PostEntityApiResponse,
+    })
     async create(
         @User<AccessTokenDTO>() token: AccessTokenDTO,
         @Body() createPostDto: CreatePostDto,
-    ): Promise<PostEntity> {
-        return await this.postsService.create(createPostDto, token.sub);
+    ): Promise<PostEntityApiResponse> {
+        return {
+            message: 'Post created successfully',
+            status: 'success',
+            data: await this.postsService.create(createPostDto, token.sub),
+        };
     }
 
     @Patch('batch-edit')
     async batchUpdate(
         @Body() posts: BatchEditPosts,
         @User<AccessTokenDTO>() token: AccessTokenDTO,
-    ): Promise<ApiResponse> {
+    ): Promise<PostEntityApiResponse> {
         const { postIds, ...updatePostDto } = posts;
         const payload = await this.postsService.batchEdit(
             token.sub,
@@ -51,7 +82,7 @@ export class PostsController {
         );
         return {
             message: `Successfully edited ${payload.count} out of ${posts.postIds.length} posts`,
-            status: "success",
+            status: 'success',
         };
     }
 
@@ -59,7 +90,7 @@ export class PostsController {
     async batchPublish(
         @Body() posts: BatchPosts,
         @User<AccessTokenDTO>() token: AccessTokenDTO,
-    ): Promise<ApiResponse> {
+    ): Promise<PostEntityApiResponse> {
         const count = await this.postsService.batchPublish(
             token.sub,
             posts.postIds,
@@ -67,7 +98,7 @@ export class PostsController {
 
         return {
             message: `Successfully published ${count} out of ${posts.postIds.length} posts`,
-            status: "success",
+            status: 'success',
         };
     }
 
@@ -75,7 +106,7 @@ export class PostsController {
     async batchDelete(
         @Body() posts: BatchPosts,
         @User<AccessTokenDTO>() token: AccessTokenDTO,
-    ): Promise<ApiResponse> {
+    ): Promise<PostEntityApiResponse> {
         const count = await this.postsService.batchDelete(
             token.sub,
             posts.postIds,
@@ -83,49 +114,83 @@ export class PostsController {
 
         return {
             message: `Successfully deleted ${count.count} out of ${posts.postIds.length} posts`,
-            status: "success",
+            status: 'success',
         };
     }
 
     @Patch(':id')
     @FormDataRequest({ storage: MemoryStoredFile })
+    @SerializeOptions({
+        groups: ['user.embed'],
+        type: PostEntityApiResponse,
+    })
     async update(
         @Param('id') id: string,
         @User<AccessTokenDTO>() token: AccessTokenDTO,
         @Body() updatePostDto: UpdatePostDto,
-    ) {
-        return await this.postsService.update(id, token.sub, updatePostDto);
+    ): Promise<PostEntityApiResponse> {
+        return {
+            message: 'Post updated successfully',
+            status: 'success',
+            data: await this.postsService.update(id, token.sub, updatePostDto),
+        };
     }
 
     @Delete(':id')
     async remove(
         @Param('id') id: string,
         @User<AccessTokenDTO>() token: AccessTokenDTO,
-    ): Promise<PostEntity> {
-        return await this.postsService.remove(id, token.sub);
+    ): Promise<PostEntityApiResponse> {
+        await this.postsService.remove(id, token.sub);
+        return {
+            message: 'Post deleted successfully',
+            status: 'success',
+        };
     }
 
     @Patch(':id/publish')
+    @SerializeOptions({
+        groups: ['user.embed'],
+        type: PostEntityApiResponse,
+    })
     async publishPost(
         @Param('id') id: string,
         @User<AccessTokenDTO>() token: AccessTokenDTO,
-    ): Promise<PostEntity> {
-        return await this.postsService.publish(id, token.sub);
+    ): Promise<PostEntityApiResponse> {
+        return {
+            message: 'Post published successsfully',
+            status: 'success',
+            data: await this.postsService.publish(id, token.sub),
+        };
     }
 
     @Get(':id')
+    @SerializeOptions({
+        groups: ['user.embed'],
+        type: PostEntityApiResponse,
+    })
+    @UseInterceptors(ClassSerializerInterceptor)
     async getPost(
         @Param('id') id: string,
         @User<AccessTokenDTO>() token: AccessTokenDTO,
     ) {
-        return await this.postsService.getOnePost(id, token.sub);
+        const post = await this.postsService.getOnePost(id, token.sub);
+        return {
+            message: 'ds',
+            status: 'success',
+            data: post,
+        };
     }
 
     @Get('/user/:userId')
+    @SerializeOptions({
+        type: PostEntityPaginatedResponse,
+        groups: ['user.embed'],
+    })
     async getAllPostsForAUser(
         @Param('userId') userId: string,
         @Query() query: PaginatedQuery,
-    ): Promise<PaginatedResponse<PostEntity>> {
+    ): Promise<PostEntityPaginatedResponse> {
         const { posts, totalCount } = await this.postsService.getAllUserPosts(
             userId,
             query,
@@ -141,10 +206,14 @@ export class PostsController {
     }
 
     @Get()
+    @SerializeOptions({
+        groups: ['user.embed'],
+        type: PostEntityPaginatedResponse,
+    })
     async getAllUserPosts(
         @User<AccessTokenDTO>() token: AccessTokenDTO,
         @Query() query: GetAllPosts,
-    ): Promise<PaginatedResponse<PostEntity>> {
+    ): Promise<PostEntityPaginatedResponse> {
         const { posts, totalCount } = await this.postsService.getAllUserPosts(
             token.sub,
             query,

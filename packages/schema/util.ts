@@ -1,4 +1,4 @@
-import {Type} from "class-transformer";
+import {Exclude, Expose, Type} from "class-transformer";
 import {
     registerDecorator,
     ValidationArguments,
@@ -7,6 +7,7 @@ import {
     ValidatorConstraintInterface,
 } from "class-validator";
 import {IsNumber, IsOptional, Min} from "class-validator";
+import {PostEntity} from "./post";
 
 export class PaginatedQuery {
     @IsOptional()
@@ -32,7 +33,22 @@ export class PaginatedResponse<T> {
 export class ApiResponse<T = void> {
     status: "pending" | "success" | "failed";
     message: string;
+    // @Type(() => T, {
+
+    // })
+    // @Type((options) => (options?.newObject as ApiResponse<T>)?.type || Function)
     data?: T;
+
+    
+    constructor(partial: Partial<ApiResponse<T>>) {
+        Object.assign(this, partial);
+    }
+}
+
+export class LoginToken {
+    access_token: string;
+    refresh_token: string;
+    // data: U
 }
 
 export function IsStrongPassword(validationOptions?: ValidationOptions) {

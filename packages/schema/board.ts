@@ -12,6 +12,8 @@ import {
     PickType,
     IntersectionType,
 } from "nestjs-mapped-types";
+import {UserEntity} from "./user";
+import {Type} from "class-transformer";
 
 export class BoardEntity implements Board {
     @IsString()
@@ -43,6 +45,10 @@ export class BoardEntity implements Board {
 
     @IsDate()
     updated_at: Date;
+
+    @Type(() => UserEntity)
+    user?: UserEntity;
+
 }
 export class CreateBoardDto extends PickType(BoardEntity, [
     "name",

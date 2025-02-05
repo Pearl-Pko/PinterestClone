@@ -25,6 +25,7 @@ import {
     // AccessTokenPayload,
     RefreshToken,
     Tokens,
+    UserTokenResponse,
 } from '@server/types/auth';
 // import { ChangePassword, ResetPasswordDto } from './dto/dto';
 import { DatabaseService } from '../database/database.service';
@@ -55,7 +56,8 @@ export class AuthService {
         private databaseService: DatabaseService,
     ) {}
 
-    async signIn(userDto: CreateUserDto): Promise<Tokens> {
+    async signIn(userDto: CreateUserDto): Promise<UserTokenResponse> {
+        console.log('ds email', userDto.email);
         const user: User | null = await this.usersService.findUser({
             email: userDto.email,
         });
@@ -77,10 +79,10 @@ export class AuthService {
             throw new ForbiddenException('Incorrect password');
         }
 
-        return await this.createUserSession(user);
+        return { ...(await this.createUserSession(user)), data: user };
     }
 
-    async signUp(user: CreateUserDto): Promise<Tokens> {
+    async signUp(user: CreateUserDto): Promise<UserTokenResponse> {
         const userExists: User | null = await this.usersService.findUser({
             email: user.email,
         });
@@ -89,14 +91,13 @@ export class AuthService {
             throw new UserAlreadyExists();
         }
 
-        console.log("ds", user.password);
         const hashPassword = await this.hashData(user.password);
         const newUser = await this.usersService.create({
             email: user.email,
             password: hashPassword,
         });
 
-        return await this.createUserSession(newUser);
+        return { ...(await this.createUserSession(newUser)), data: newUser };
     }
 
     async handleProviderLogin(user: GoogleProfile): Promise<Tokens> {
@@ -126,7 +127,7 @@ export class AuthService {
             existingUser = await this.databaseService.user.create({
                 data: {
                     username: convertTextToSlug(email.split('@')[0]),
-                    email: email
+                    email: email,
                 },
             });
         }
@@ -410,23 +411,25 @@ export class AuthService {
         return true;
     }
 
-    async setPassword(userToken: AccessTokenDTO, setPasswordDto: SetPasswordDto) {
-        const user = await this.usersService.findUser({id: userToken.sub})
+    async setPassword(
+        userToken: AccessTokenDTO,
+        setPasswordDto: SetPasswordDto,
+    ) {
+        const user = await this.usersService.findUser({ id: userToken.sub });
 
-        if (!user) 
-            throw new UserWithIdNotFoundException(userToken.sub);
+        if (!user) throw new UserWithIdNotFoundException(userToken.sub);
 
         if (user.password) {
-            throw new BadRequestException('Password already set. Please reset it instead.');
-          }
-        
+            throw new BadRequestException(
+                'Password already set. Please reset it instead.',
+            );
+        }
 
         const hashPassword = await this.hashData(setPasswordDto.password);
 
-
         await this.usersService.updateUser(userToken.sub, {
-            password: hashPassword
-        })
+            password: hashPassword,
+        });
         return true;
     }
 }

@@ -14,15 +14,26 @@ import { PinService } from './pin.service';
 import { AccessTokenDTO } from '@schema/auth';
 import { CreatePinDto, PinEntity } from '@schema/pin';
 import { User } from '@server/decorators/user';
-import { PaginatedQuery, PaginatedResponse } from '@schema/util';
+import { ApiResponse, PaginatedQuery, PaginatedResponse } from '@schema/util';
 import {
     ClassTransformOptions,
     instanceToPlain,
     plainToClass,
     plainToInstance,
+    Type,
 } from 'class-transformer';
 import { BoardService } from './board.service';
+import { Pin } from '@prisma/client';
 
+class PinEntityApiResponse extends ApiResponse<Pin | Pin[]> {
+    @Type(() => PinEntity)
+    data?: Pin | Pin[] | undefined;
+}
+
+// @SerializeOptions({
+//     groups: ['user.embed'],
+//     type: PinEntityApiResponse,
+// })
 @Controller('pin')
 export class PinController {
     constructor(
@@ -31,22 +42,34 @@ export class PinController {
     ) {}
 
     @Post()
+    @SerializeOptions({
+        groups: ['user.embed', 'pin.private'],
+        type: PinEntityApiResponse,
+    })
     async create(
         @User<AccessTokenDTO>() token: AccessTokenDTO,
         @Body() createPinDto: CreatePinDto,
-    ) {
-        return await this.pinService.create(token.sub, createPinDto);
+    ): Promise<ApiResponse<Pin>> {
+        console.log('create pin', createPinDto);
+        return {
+            message: 'Pin created successfully',
+            status: 'success',
+            data: await this.pinService.create(token.sub, createPinDto),
+        };
     }
 
     @Get(':id')
     async get(
         @Param('id') id: string,
         @User<AccessTokenDTO>() token: AccessTokenDTO,
-    ) {
+    ): Promise<ApiResponse<Record<string, any>>> {
         const pin = await this.pinService.getPin(id, token.sub);
 
         const transformOptions: ClassTransformOptions = {
-            groups: token.sub === pin.user_id ? ['user'] : [],
+            groups:
+                token.sub === pin.user_id
+                    ? ['user.embed', 'pin.private']
+                    : ['user.embed'],
         };
         const sanitizedPinInstance = plainToInstance(
             PinEntity,
@@ -59,7 +82,11 @@ export class PinController {
             transformOptions,
         );
 
-        return sanitizedPin;
+        return {
+            status: 'success',
+            message: 'Pin retrieved successfully',
+            data: sanitizedPin,
+        };
     }
 
     @Delete(':id')
@@ -71,10 +98,14 @@ export class PinController {
     }
 
     @Get()
+    @SerializeOptions({
+        groups: ['user.embed', 'pin.private'],
+        type: PinEntityApiResponse,
+    })
     async getAllPins(
         @User<AccessTokenDTO>() token: AccessTokenDTO,
         @Query() query: PaginatedQuery,
-    ): Promise<PaginatedResponse<PinEntity>> {
+    ): Promise<PaginatedResponse<Pin>> {
         const { pins, totalCount } = await this.pinService.getAllUserPins(
             token.sub,
             query,
@@ -93,6 +124,8 @@ export class PinController {
         @User<AccessTokenDTO>() token: AccessTokenDTO,
         @Query() query: PaginatedQuery,
     ) {
+        const board = await this.boardService.getOneBoard(boardId, token.sub);
+
         const { pins, totalCount } = await this.pinService.getPinsInBoard(
             boardId,
             token.sub,
@@ -100,8 +133,11 @@ export class PinController {
         );
 
         const transformOptions: ClassTransformOptions = {
+            groups:
+                token.sub === board.user_id
+                    ? ['user.embed', 'pin.private']
+                    : ['user.embed'],
         };
-
         const sanitizedPinInstances = plainToInstance(
             PinEntity,
             pins,

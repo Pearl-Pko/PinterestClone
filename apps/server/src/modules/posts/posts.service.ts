@@ -8,7 +8,7 @@ import {
 import { DatabaseService } from '@server/modules/database/database.service';
 import { AuthorNotFoundException } from '@server/common/exceptions/exceptions';
 import { GetAllPosts, PostEntity } from '@schema/post';
-import { PostStatus, Prisma } from '@prisma/client';
+import { Post, PostStatus, Prisma } from '@prisma/client';
 import { S3Service } from '../s3/s3.service';
 import { addDays } from 'date-fns';
 import { Cron, CronExpression } from '@nestjs/schedule';
@@ -24,7 +24,7 @@ export class PostsService {
         private readonly s3Service: S3Service,
     ) {}
 
-    async create(data: CreatePostDto, userId: string): Promise<PostEntity> {
+    async create(data: CreatePostDto, userId: string): Promise<Post> {
         const { content, ...rest } = data;
 
         const uri = await this.s3Service.uploadFile(
@@ -47,6 +47,9 @@ export class PostsService {
                         },
                     },
                 },
+                include: {
+                    author: true,
+                },
             });
         } catch (error) {
             console.log(error.code);
@@ -60,11 +63,12 @@ export class PostsService {
         }
     }
 
+    
     async update(
         id: string,
         userId: string,
         data: UpdatePostDto,
-    ): Promise<PostEntity> {
+    ): Promise<Post> {
         try {
             const post = await this.getOnePost(id, userId, true);
             const { content, ...rest } = data;
@@ -90,6 +94,9 @@ export class PostsService {
                     id: id,
                 },
                 data: { ...rest, content_uri: uri },
+                include: {
+                    author: true
+                }
             });
             return updatedPost;
         } catch (error) {
@@ -132,7 +139,7 @@ export class PostsService {
         }
     }
 
-    async publish(id: string, userId: string): Promise<PostEntity> {
+    async publish(id: string, userId: string): Promise<Post> {
         try {
             const post = await this.getOnePost(id, userId, true);
 
@@ -151,6 +158,9 @@ export class PostsService {
                     status: 'posted',
                     expiresAt: null,
                 },
+                include: {
+                    author: true
+                }
             });
 
             const match = data.content_uri.match(/public.+/);
@@ -173,10 +183,17 @@ export class PostsService {
         }
     }
 
-    async getOnePost(id: string, userId: string, mutation: boolean = false) {
+    async getOnePost(
+        id: string,
+        userId: string,
+        mutation: boolean = false,
+    ): Promise<Post> {
         const post = await this.database.post.findUnique({
             where: {
                 id: id,
+            },
+            include: {
+                author: true,
             },
         });
 
@@ -205,7 +222,7 @@ export class PostsService {
         userId: string,
         query: PaginatedQuery,
         status: PostStatus,
-    ) {
+    ): Promise<{ posts: Post[]; totalCount: number }> {
         try {
             const filter: Prisma.PostWhereInput = {
                 author_id: userId,
@@ -218,6 +235,9 @@ export class PostsService {
                 take: query.limit,
                 orderBy: {
                     created_at: 'desc',
+                },
+                include: {
+                    author: true,
                 },
             });
             const totalCount = await this.database.post.count({

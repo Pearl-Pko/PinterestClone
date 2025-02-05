@@ -16,7 +16,7 @@ export class AccessTokenStrategy extends PassportStrategy(JwtStrategy, 'jwt') {
                 },
             ]),
             ignoreExpiration: false,
-            secretOrKey: configService.get<string>('JWT_ACCESS_SECRET'),
+            secretOrKey: configService.get<string>('JWT_ACCESS_SECRET') || '',
         });
     }
 

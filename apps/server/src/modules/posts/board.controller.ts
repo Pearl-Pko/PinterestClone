@@ -1,5 +1,6 @@
 import {
     Body,
+    ClassSerializerInterceptor,
     Controller,
     Delete,
     Get,
@@ -7,6 +8,8 @@ import {
     Patch,
     Post,
     Query,
+    SerializeOptions,
+    UseInterceptors,
 } from '@nestjs/common';
 import { BoardService } from './board.service';
 import { FormDataRequest, MemoryStoredFile } from 'nestjs-form-data';
@@ -14,8 +17,18 @@ import { AccessTokenDTO } from '@schema/auth';
 import { User } from '@server/decorators/user';
 import { BoardEntity, CreateBoardDto, UpdateBoardDto } from '@schema/board';
 import { PinService } from './pin.service';
-import { PaginatedQuery, PaginatedResponse } from '@schema/util';
+import { ApiResponse, PaginatedQuery, PaginatedResponse } from '@schema/util';
+import { Type } from 'class-transformer';
+import { Board } from '@prisma/client';
+class BoardEntityApiResponse extends ApiResponse<Board | Board[]> {
+    @Type(() => BoardEntity)
+    data?: Board | Board[] | undefined;
+}
 
+@SerializeOptions({
+    groups: ['user.embed'],
+    type: BoardEntityApiResponse,
+})
 @Controller('board')
 export class BoardController {
     constructor(
@@ -27,8 +40,12 @@ export class BoardController {
     async create(
         @User<AccessTokenDTO>() token: AccessTokenDTO,
         @Body() createBoardDto: CreateBoardDto,
-    ) {
-        return await this.boardService.create(createBoardDto, token.sub);
+    ): Promise<ApiResponse<Board>> {
+        return {
+            status: 'success',
+            message: 'Board created successfully',
+            data: await this.boardService.create(createBoardDto, token.sub),
+        };
     }
 
     @Patch(':id')
@@ -36,32 +53,43 @@ export class BoardController {
         @Param('id') id: string,
         @User<AccessTokenDTO>() token: AccessTokenDTO,
         @Body() updateBoardDto: UpdateBoardDto,
-    ) {
-        return await this.boardService.edit(id, token.sub, updateBoardDto);
+    ): Promise<ApiResponse<Board>> {
+        return {
+            message: 'Board edited successfully',
+            status: 'success',
+            data: await this.boardService.edit(id, token.sub, updateBoardDto),
+        };
     }
 
     @Delete(':id')
     async delete(
         @Param('id') id: string,
         @User<AccessTokenDTO>() token: AccessTokenDTO,
-    ) {
-        return await this.boardService.deleteBoard(id, token.sub)
+    ): Promise<ApiResponse<Board>> {
+        return {
+            message: 'Board deleted successfully',
+            status: 'success',
+            data: await this.boardService.deleteBoard(id, token.sub),
+        };
     }
 
     @Patch(':id/restore')
     async restore(
         @Param('id') id: string,
         @User<AccessTokenDTO>() token: AccessTokenDTO,
-    ) 
-    {
-        return await this.boardService.restoreBoard(id, token.sub);
+    ): Promise<ApiResponse<Board>> {
+        return {
+            message: 'Board restored successfully',
+            status: 'success',
+            data: await this.boardService.restoreBoard(id, token.sub),
+        };
     }
 
     @Get()
     async getAllBoards(
         @User<AccessTokenDTO>() token: AccessTokenDTO,
         @Query() query: PaginatedQuery,
-    ): Promise<PaginatedResponse<BoardEntity>> {
+    ): Promise<PaginatedResponse<Board>> {
         const { boards, totalCount } = await this.boardService.getBoards(
             token.sub,
             query,
@@ -99,8 +127,12 @@ export class BoardController {
     async getBoard(
         @Param('id') id: string,
         @User<AccessTokenDTO>() token: AccessTokenDTO,
-    ) {
-        return await this.boardService.getOneBoard(id, token.sub);
+    ): Promise<ApiResponse<Board>> {
+        return {
+            status: 'success',
+            message: 'Board returned successfully',
+            data: await this.boardService.getOneBoard(id, token.sub),
+        };
     }
 
     @Get(':id/pins')

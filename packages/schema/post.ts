@@ -12,6 +12,8 @@ import {
     IsUUID,
 } from "class-validator";
 import {PaginatedQuery} from "./util";
+import {UserEntity} from "./user";
+import { Expose, Type } from "class-transformer";
 
 type OptionalNullableProperties<T> = {
     [K in keyof T as null extends T[K] ? never : K]: T[K];
@@ -57,6 +59,28 @@ export class PostEntity implements NullablePost {
 
     @IsDate()
     updated_at: Date;
+
+    @Expose()
+    @Type(() => UserEntity)
+    author?: UserEntity;
+
+    constructor(partial: Partial<PostEntity>) {
+        Object.assign(this, partial);
+        console.log("happen");
+    }
+}
+
+export class CreatePostDto extends OmitType(PostEntity, [
+    "author_id",
+    "updated_at",
+    "created_at",
+    "id",
+    "content_uri",
+    "expiresAt",
+    "status",
+    "author"
+]) {
+    
 }
 
 export class GetAllPosts extends PaginatedQuery {
@@ -77,15 +101,17 @@ export class BatchPosts {
     postIds: string[];
 }
 
-export class BatchEditPosts extends IntersectionType(PartialType(
-    OmitType(PostEntity, [
-        "author_id",
-        "updated_at",
-        "created_at",
-        "id",
-        "content_uri",
-        "expiresAt",
-        "status",
-    ])
-), BatchPosts) {
-}
+export class BatchEditPosts extends IntersectionType(
+    PartialType(
+        OmitType(PostEntity, [
+            "author_id",
+            "updated_at",
+            "created_at",
+            "id",
+            "content_uri",
+            "expiresAt",
+            "status",
+        ])
+    ),
+    BatchPosts
+) {}

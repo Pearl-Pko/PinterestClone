@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { ClassSerializerInterceptor, Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { ConfigModule, ConfigService } from '@nestjs/config';
@@ -44,10 +44,10 @@ import { ScheduleModule } from '@nestjs/schedule';
     controllers: [AppController],
     providers: [
         AppService,
-        // {
-        //     provide: APP_INTERCEPTOR,
-        //     useClass: LoggingInterceptor,
-        // },
+        {
+            provide: APP_INTERCEPTOR,
+            useClass: ClassSerializerInterceptor,
+        },
     ],
 })
 export class AppModule {}

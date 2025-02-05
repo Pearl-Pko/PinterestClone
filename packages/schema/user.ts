@@ -18,37 +18,54 @@ import {PartialType, PickType} from "nestjs-mapped-types";
 import {Exclude, Expose, Transform, Type} from "class-transformer";
 import {IsStrongPassword} from "./util";
 
+@Exclude()
 export class UserEntity implements User {
     @IsUUID()
+    @Expose({
+        groups: ["user", "token", "user.private", "user.embed"],
+    })
     id: string;
 
     @IsEmail()
     @IsOptional()
+    @Expose({groups: ["token", "user.private"]})
     email: string | null;
 
     @IsNotEmpty()
     @Length(2, 30)
     @Matches(/^[a-z0-9]+(-[a-z0-9]+)*$/, {
-        message: 'Username must be a slug: lowercase letters, numbers, and hyphens only.',
-      })
+        message:
+            "Username must be a slug: lowercase letters, numbers, and hyphens only.",
+    })
+    @Expose({groups: ["user", "token", "user.private", "user.embed"]})
     username: string;
 
     @IsOptional()
+    @Expose({
+        groups: ["user", "token", "user.private", "user.embed"],
+    })
     first_name: string | null;
 
     @IsOptional()
+    @Expose({
+        groups: ["user", "token", "user.private", "user.embed"],
+    })
     last_name: string | null;
 
     @IsOptional()
+    @Expose({groups: ["user", "token", "user.private", "user.embed"]})
     displayPhoto: string | null;
 
     @IsOptional()
+    @Expose({groups: ["user", "user.private"]})
     language: string | null;
 
     @IsOptional()
+    @Expose({groups: ["user", "user.private"]})
     about: string | null;
 
     @IsOptional()
+    @Expose({groups: ["user", "user.private"]})
     website: string | null;
 
     @IsNotEmpty()
@@ -58,24 +75,29 @@ export class UserEntity implements User {
     password: string | null;
 
     @IsOptional()
+    @Expose({groups: ["user.private"]})
     @Type(() => Date)
     @IsDate({message: "Date must be a valid ISO8601 string"})
     @MaxDate(() => new Date(), {
-        message: "Date of birth cannot be in the future"
+        message: "Date of birth cannot be in the future",
     })
     date_of_birth: Date | null;
 
+    @Expose({groups: ["user.private"]})
     @IsEnum(Gender)
     gender: Gender | null;
 
     @IsOptional()
+    @Expose({groups: ["user.private"]})
     country: string | null;
 
     @IsDate()
+    @Expose({groups: ["user.private"]})
     created_at: Date;
 
     @IsDate()
     @IsNotEmpty()
+    @Expose({groups: ["user.private"]})
     updated_at: Date;
 
     @IsOptional()
@@ -90,17 +112,20 @@ export class UserEntity implements User {
     @IsArray()
     Account?: Account[];
 
-    @Expose({name: "full_name"})
+    @Expose({
+        name: "full_name",
+        groups: ["user", "user.private", "token", "user.embed"],
+    })
     getFullName() {
         return this.first_name + " " + this.last_name;
     }
 
-    @Expose({name: "hasPassword"})
+    @Expose({name: "hasPassword", groups: ["user.private"]})
     getHasPassword() {
         return !!this.password;
     }
 
-    @Expose({name: "providers"})
+    @Expose({name: "providers", groups: ["user.private"]})
     getProviders() {
         return new Set(this.Account?.map((account) => account.provider));
     }
@@ -125,13 +150,18 @@ export class CreateUserDto
     extends PickType(UserEntity, ["email", "password"] as const)
     implements Omit<Prisma.UserCreateInput, "username">
 {
+    @Expose()
     email: string;
     password: string;
 }
 
 export class LoginUserDto
     extends PickType(UserEntity, ["email", "password"] as const)
-    implements Omit<Prisma.UserCreateInput, "username"> {}
+    implements Omit<Prisma.UserCreateInput, "username">
+{
+    @Expose()
+    email: string;
+}
 
 export class ChangePassword {
     @IsNotEmpty()
@@ -180,6 +210,9 @@ export class EditProfileDto extends PartialType(
     ] as const)
 ) {}
 
-export class ChangeUsernameDto extends PickType(UserEntity, ["username"] as const) {
-
+export class ChangeUsernameDto extends PickType(UserEntity, [
+    "username",
+] as const) {
+    @Expose()
+    username: string;
 }

@@ -7,7 +7,7 @@ import {
 } from '@nestjs/common';
 import { DatabaseService } from '../database/database.service';
 import { CreateBoardDto, UpdateBoardDto } from '@schema/board';
-import { Pin, Prisma } from '@prisma/client';
+import { Board, Pin, Prisma } from '@prisma/client';
 import { AuthorNotFoundException } from '@server/common/exceptions/exceptions';
 import { PinService } from './pin.service';
 import { User } from '@server/decorators/user';
@@ -18,7 +18,7 @@ import { PaginatedQuery } from '@schema/util';
 export class BoardService {
     constructor(private readonly database: DatabaseService) {}
 
-    async create(data: CreateBoardDto, userId: string) {
+    async create(data: CreateBoardDto, userId: string)  {
         try {
             return await this.database.board.create({
                 data: {
@@ -28,7 +28,11 @@ export class BoardService {
                             id: userId,
                         },
                     },
+
                 },
+                include: {
+                    user: true
+                }
             });
         } catch (error) {
             if (error instanceof Prisma.PrismaClientKnownRequestError) {
@@ -64,6 +68,9 @@ export class BoardService {
                     ...rest,
                     banner_id,
                 },
+                include: {
+                    user: true
+                }
             });
         } catch (error) {
             console.log(error.code, error.meta);
@@ -87,6 +94,9 @@ export class BoardService {
             where: {
                 id: id,
             },
+            include: {
+                user: true
+            }
         });
 
         if (!board) {
@@ -122,6 +132,9 @@ export class BoardService {
             },
             data: {
                 deletedAt: new Date()
+            },
+            include: {
+                user: true
             }
         })
     }
@@ -146,6 +159,9 @@ export class BoardService {
             },
             data: {
                 deletedAt: null
+            },
+            include: {
+                user: true
             }
         })
     }
@@ -162,6 +178,9 @@ export class BoardService {
             orderBy: {
                 created_at: 'desc',
             },
+            include: {
+                user: true
+            }
         });
         const totalCount = await this.database.board.count({
             where: filter,

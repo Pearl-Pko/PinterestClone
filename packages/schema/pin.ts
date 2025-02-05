@@ -1,7 +1,9 @@
-import {Pin} from "@prisma/client";
-import { Exclude, Expose } from "class-transformer";
+import {Pin, Post, User} from "@prisma/client";
+import { Exclude, Expose, Type } from "class-transformer";
 import {IsDate, IsOptional, IsString, MaxLength} from "class-validator";
 import { PartialType, PickType } from "nestjs-mapped-types";
+import { PostEntity } from "./post";
+import { UserEntity } from "./user";
 
 export class PinEntity implements Pin {
     @IsString()
@@ -16,7 +18,7 @@ export class PinEntity implements Pin {
     @IsString()
     post_id: string;
 
-    @Expose({groups: ['user'], toClassOnly: true, })
+    @Expose({groups: ['pin.private'] })
     @IsOptional()
     @IsString()
     @MaxLength(500)
@@ -27,8 +29,17 @@ export class PinEntity implements Pin {
 
     @IsDate()
     updated_at: Date;
+
+    @Type(() => PostEntity)
+    post?: Post
+
+    @Type(() => UserEntity)
+    user?: User
 }
 
-export class CreatePinDto extends PickType(PinEntity, ["board_id", "post_id", "private_note"]) {}
+export class CreatePinDto extends PickType(PinEntity, ["board_id", "post_id", "private_note"]) {
+    @Expose()
+    private_note: string | null;
+}
 
 // export class UpdatePinDto extends PartialType(PickType(PinEntity, ["post_id"]))

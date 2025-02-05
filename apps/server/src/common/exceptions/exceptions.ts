@@ -28,9 +28,9 @@ export class UserWithEmailNotFoundException extends HttpException {
 }
 
 export class UserWithUsernameNotFoundException extends HttpException {
-    constructor(email: string) {
+    constructor(username: string) {
         super(
-            `User with email ${email} does not exist`,
+            `User with username '${username}' does not exist`,
             HttpStatus.NOT_FOUND
         )
     }

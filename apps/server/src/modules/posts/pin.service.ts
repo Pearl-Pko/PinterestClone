@@ -22,6 +22,10 @@ export class PinService {
 
             return await this.database.pin.create({
                 data: { ...data, user_id: userId },
+                include: {
+                    user: true,
+                    post: true,
+                },
             });
         } catch (error) {
             if (error instanceof Prisma.PrismaClientKnownRequestError) {
@@ -42,6 +46,10 @@ export class PinService {
         const pin = await this.database.pin.findUnique({
             where: {
                 id: id,
+            },
+            include: {
+                post: true,
+                user: true,
             },
         });
         if (!pin) {
@@ -73,6 +81,10 @@ export class PinService {
             orderBy: {
                 created_at: 'desc',
             },
+            include: {
+                user: true,
+                post: true,
+            },
         });
         const totalCount = await this.database.pin.count({
             where: filter,
@@ -85,9 +97,6 @@ export class PinService {
         userId: string,
         @Query() query: PaginatedQuery,
     ) {
-        const bb = await this.boardService.getOneBoard(boardId, userId);
-
-        console.log("ds", bb);
         const filter: Prisma.PinWhereInput = {
             board_id: boardId,
         };
@@ -96,10 +105,14 @@ export class PinService {
             where: filter,
             skip: (query.page - 1) * query.limit,
             take: query.limit,
-            
+
             orderBy: {
                 created_at: 'desc',
             },
+            include: {
+                user: true, 
+                post: true
+            }
         });
         const totalCount = await this.database.pin.count({
             where: filter,

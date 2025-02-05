@@ -8,11 +8,10 @@ import {
     GoogleCallbackParameters,
 } from 'passport-google-oauth20';
 
-
 export interface GoogleProfile {
     id: string;
     displayName: string;
-    emails: { value: string, verified: boolean }[];
+    emails: { value: string; verified: boolean }[];
     name: {
         familyName: string; // Last name
         givenName: string; // First name
@@ -26,13 +25,13 @@ export interface GoogleProfile {
 export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
     constructor(private configService: ConfigService) {
         super({
-            clientID: configService.get<string>('GOOGLE_CLIENT_ID'),
-            clientSecret: configService.get<string>('GOOGLE_CLIENT_SECRET'),
+            clientID: configService.get<string>('GOOGLE_CLIENT_ID') || '',
+            clientSecret:
+                configService.get<string>('GOOGLE_CLIENT_SECRET') || '',
             callbackURL: `${configService.get<string>('SERVER_DOMAIN')}/user/google/callback`,
-            callbackUrl: "",
             scope: ['email', 'profile'],
 
-
+            // passReqToCallback: true,
         });
 
         console.log('ds', configService.get<string>('GOOGLE_CLIENT_ID'));
@@ -44,7 +43,6 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
         profile: GoogleProfile,
         done: VerifyCallback,
     ): Promise<any> {
-
         done(null, profile);
     }
 }

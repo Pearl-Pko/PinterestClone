@@ -17,13 +17,14 @@ import {
     Query,
     BadRequestException,
     applyDecorators,
+    SerializeOptions,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { AuthGuard } from '@nestjs/passport';
 import { AccessTokenGuard } from './guards/access-auth.guard';
 import { Public } from '@server/constants/constants';
 import { RefreshTokenGuard } from './guards/refresh-auth.guard';
-import { User } from '@server/decorators/user';
+import { User as UserToken } from '@server/decorators/user';
 import { RefreshToken } from '@server/types/auth';
 // import { ChangePassword, ForgotPasswordDto, ResetPasswordDto } from './dto/dto';
 import { MailService } from '../mail/mail.service';
@@ -39,6 +40,7 @@ import {
     ResetPasswordDto,
     SetPasswordDto,
     UnlinkProviderDto,
+    UserEntity,
 } from '@schema/user';
 import { AccessTokenDTO } from '@schema/auth';
 import { GoogleOauthGuard, OAuthState } from './guards/google-oauth.guard';
@@ -47,8 +49,19 @@ import { UserWithIdNotFoundException } from '@server/common/exceptions/exception
 import { Response } from 'express';
 import { ApiResponse } from '@schema/util';
 import { set } from 'date-fns';
+import { Type } from 'class-transformer';
+import { User } from '@prisma/client';
+
+class UserEntityApiResponse extends ApiResponse<User | User[]> {
+    @Type(() => UserEntity)
+    data?: User | User[] | undefined;
+}
 
 @Controller('user')
+@SerializeOptions({
+    groups: ['user', 'user.private'],
+    type: UserEntityApiResponse,
+})
 export class AuthController {
     constructor(
         private readonly authService: AuthService,
@@ -59,7 +72,7 @@ export class AuthController {
     @HttpCode(HttpStatus.OK)
     @UseInterceptors(AddSessionInterceptor)
     @Post('login')
-    async login(@Body() createUserDto: CreateUserDto) {
+    async login(@Body() createUserDto: CreateUserDto)  {
         return await this.authService.signIn(createUserDto);
     }
 
@@ -76,7 +89,7 @@ export class AuthController {
     @HttpCode(HttpStatus.OK)
     @UseInterceptors(AddSessionInterceptor)
     @Post('refresh')
-    async refresh(@User<RefreshToken>() token: RefreshToken) {
+    async refresh(@UserToken<RefreshToken>() token: RefreshToken) {
         return await this.authService.refreshToken(token);
     }
 
@@ -85,7 +98,7 @@ export class AuthController {
     @UseGuards(RefreshTokenGuard)
     @UseInterceptors(RemoveSessionInterceptor)
     @Post('logout')
-    async logout(@User<RefreshToken>() token: RefreshToken) {
+    async logout(@UserToken<RefreshToken>() token: RefreshToken) {
         if (await this.authService.logout(token)) {
             return { status: 'success', message: 'Successfully logged out' };
         }
@@ -102,7 +115,7 @@ export class AuthController {
     @Get('google/callback')
     @UseGuards(AuthGuard('google'))
     async googleAuthRedirect(
-        @User<GoogleProfile>() user: GoogleProfile,
+        @UserToken<GoogleProfile>() user: GoogleProfile,
         @Query('state') state: string,
         @Res() res: Response,
     ) {
@@ -140,20 +153,26 @@ export class AuthController {
     async googleAuthLink() {}
 
     @Post('unlink-provider')
-    async unlinkProivder(@User<AccessTokenDTO>() user: AccessTokenDTO, @Body() provider : UnlinkProviderDto) : Promise<ApiResponse> {
-        const result = await this.authService.handleProviderUnlink(user.sub, provider.provider)
+    async unlinkProivder(
+        @UserToken<AccessTokenDTO>() user: AccessTokenDTO,
+        @Body() provider: UnlinkProviderDto,
+    ): Promise<ApiResponse> {
+        const result = await this.authService.handleProviderUnlink(
+            user.sub,
+            provider.provider,
+        );
         return {
-            status: result ? "success" : "failed",
-            message: "Provider unlinked successfullly"
-        }
+            status: result ? 'success' : 'failed',
+            message: 'Provider unlinked successfullly',
+        };
     }
-
-
 
     @Public()
     @Get('google/link/callback')
     @UseGuards(AuthGuard('google'))
-    async googleAuthLinkRedirect(@User<GoogleProfile>() user: GoogleProfile) {
+    async googleAuthLinkRedirect(
+        @UserToken<GoogleProfile>() user: GoogleProfile,
+    ) {
         console.log('link callback');
         // return await this.authService.handleProviderLogin(user);
     }
@@ -161,7 +180,7 @@ export class AuthController {
     @Post('change-password')
     @HttpCode(HttpStatus.OK)
     async changePassword(
-        @User<AccessTokenDTO>() token: AccessTokenDTO,
+        @UserToken<AccessTokenDTO>() token: AccessTokenDTO,
         @Body() password: ChangePassword,
     ) {
         // this.authService.
@@ -211,11 +230,17 @@ export class AuthController {
         );
     }
 
-    @Post("set-password")
+    @Post('set-password')
     @HttpCode(HttpStatus.OK)
-    async setPassword(@User<AccessTokenDTO>() user: AccessTokenDTO, @Body() setPassowrdDto: SetPasswordDto) : Promise<ApiResponse> {
-        const setPass = await this.authService.setPassword(user, setPassowrdDto)
+    async setPassword(
+        @UserToken<AccessTokenDTO>() user: AccessTokenDTO,
+        @Body() setPassowrdDto: SetPasswordDto,
+    ): Promise<ApiResponse> {
+        const setPass = await this.authService.setPassword(
+            user,
+            setPassowrdDto,
+        );
 
-        return { message: 'Password set successfully', status: "success" };
+        return { message: 'Password set successfully', status: 'success' };
     }
 }
